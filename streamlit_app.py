@@ -1,19 +1,14 @@
 """
-AI Work Sentiment Dashboard - Streamlit Deployable App
+AI Work Sentiment Dashboard - Streamlit App
 
-Dashboard skripsi untuk visualisasi dan deployment modeling analisis sentimen
-publik terhadap Artificial Intelligence dalam dunia kerja berbasis pengetahuan
+Dashboard skripsi untuk visualisasi hasil modeling analisis sentimen publik
+terhadap Artificial Intelligence dalam dunia kerja berbasis pengetahuan
 di Indonesia.
 
 Versi ini tidak lagi membaca file HTML hasil export notebook. App membaca
-Dataset Final.csv, menjalankan preprocessing, split data, feature extraction,
-training baseline TF-IDF + SVM, evaluasi, dan prediksi secara langsung saat
-Streamlit berjalan.
-
-Catatan:
-- Fine-tuning IndoBERT/IndoBERTweet disediakan sebagai opsi manual karena proses
-  training Transformer berat untuk Streamlit Cloud.
-- Untuk deployment ringan, model yang otomatis aktif adalah TF-IDF + SVM.
+Dataset Final.csv, menjalankan preprocessing, data splitting, TF-IDF feature
+extraction, evaluasi baseline SVM, prediksi interaktif, serta menampilkan
+visualisasi hasil modeling Transformer dari notebook Bab IV.
 """
 
 from __future__ import annotations
@@ -67,6 +62,111 @@ LABEL_COLORS = {
     "ancaman": "#E15759",
     "peluang": "#59A14F",
     "netral": "#4E79A7",
+}
+
+
+FINAL_MODEL_RESULTS = {
+    "TF-IDF + SVM tanpa stemming": {
+        "accuracy": 0.841300,
+        "macro_precision": 0.84,
+        "macro_recall": 0.84,
+        "macro_f1": 0.84,
+        "weighted_precision": 0.84,
+        "weighted_recall": 0.84,
+        "weighted_f1": 0.84,
+        "catatan": "Baseline TF-IDF + SVM tanpa stemming",
+    },
+    "TF-IDF + SVM dengan stemming": {
+        "accuracy": 0.827916,
+        "macro_precision": 0.83,
+        "macro_recall": 0.83,
+        "macro_f1": 0.83,
+        "weighted_precision": 0.83,
+        "weighted_recall": 0.83,
+        "weighted_f1": 0.83,
+        "catatan": "Baseline TF-IDF + SVM dengan stemming",
+    },
+    "IndoBERT": {
+        "accuracy": 0.876673,
+        "macro_precision": 0.88,
+        "macro_recall": 0.88,
+        "macro_f1": 0.88,
+        "weighted_precision": 0.88,
+        "weighted_recall": 0.88,
+        "weighted_f1": 0.88,
+        "catatan": "Fine-tuning IndoBERT",
+    },
+    "IndoBERTweet": {
+        "accuracy": 0.852772,
+        "macro_precision": 0.85,
+        "macro_recall": 0.86,
+        "macro_f1": 0.85,
+        "weighted_precision": 0.86,
+        "weighted_recall": 0.85,
+        "weighted_f1": 0.85,
+        "catatan": "Fine-tuning IndoBERTweet dengan text_light_normalized",
+    },
+    "IndoBERTweet tanpa normalisasi": {
+        "accuracy": 0.851816,
+        "macro_precision": 0.85,
+        "macro_recall": 0.85,
+        "macro_f1": 0.85,
+        "weighted_precision": 0.85,
+        "weighted_recall": 0.85,
+        "weighted_f1": 0.85,
+        "catatan": "Fine-tuning IndoBERTweet dengan full_text",
+    },
+}
+
+TRANSFORMER_RESULTS = {
+    "IndoBERT": {
+        "model_hf": "indobenchmark/indobert-base-p1",
+        "input_col": "text_light_normalized",
+        "accuracy": 0.876673,
+        "training": [
+            {"Epoch": 1, "Training Loss": 0.590066, "Validation Loss": 0.480768, "Validation Accuracy": 0.858509},
+            {"Epoch": 2, "Training Loss": 0.343443, "Validation Loss": 0.445905, "Validation Accuracy": 0.864245},
+            {"Epoch": 3, "Training Loss": 0.209075, "Validation Loss": 0.514817, "Validation Accuracy": 0.869981},
+        ],
+        "class_rows": [
+            {"Kelas": "ancaman", "Precision": 0.87, "Recall": 0.91, "F1-score": 0.89, "Support": 357},
+            {"Kelas": "netral", "Precision": 0.89, "Recall": 0.84, "F1-score": 0.86, "Support": 389},
+            {"Kelas": "peluang", "Precision": 0.87, "Recall": 0.89, "F1-score": 0.88, "Support": 300},
+        ],
+        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.87      0.91      0.89       357\n      netral       0.89      0.84      0.86       389\n     peluang       0.87      0.89      0.88       300\n\n    accuracy                           0.88      1046\n   macro avg       0.88      0.88      0.88      1046\nweighted avg       0.88      0.88      0.88      1046""",
+    },
+    "IndoBERTweet": {
+        "model_hf": "indolem/indobertweet-base-uncased",
+        "input_col": "text_light_normalized",
+        "accuracy": 0.852772,
+        "training": [
+            {"Epoch": 1, "Training Loss": 0.646081, "Validation Loss": 0.486924, "Validation Accuracy": 0.831740},
+            {"Epoch": 2, "Training Loss": 0.372374, "Validation Loss": 0.514493, "Validation Accuracy": 0.837476},
+            {"Epoch": 3, "Training Loss": 0.255556, "Validation Loss": 0.562762, "Validation Accuracy": 0.847036},
+        ],
+        "class_rows": [
+            {"Kelas": "ancaman", "Precision": 0.84, "Recall": 0.92, "F1-score": 0.88, "Support": 357},
+            {"Kelas": "netral", "Precision": 0.89, "Recall": 0.78, "F1-score": 0.83, "Support": 389},
+            {"Kelas": "peluang", "Precision": 0.83, "Recall": 0.86, "F1-score": 0.84, "Support": 300},
+        ],
+        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.84      0.92      0.88       357\n      netral       0.89      0.78      0.83       389\n     peluang       0.83      0.86      0.84       300\n\n    accuracy                           0.85      1046\n   macro avg       0.85      0.86      0.85      1046\nweighted avg       0.86      0.85      0.85      1046""",
+    },
+    "IndoBERTweet tanpa normalisasi": {
+        "model_hf": "indolem/indobertweet-base-uncased",
+        "input_col": "full_text",
+        "accuracy": 0.851816,
+        "training": [
+            {"Epoch": 1, "Training Loss": 0.646134, "Validation Loss": 0.473880, "Validation Accuracy": 0.839388},
+            {"Epoch": 2, "Training Loss": 0.377521, "Validation Loss": 0.492793, "Validation Accuracy": 0.837476},
+            {"Epoch": 3, "Training Loss": 0.251278, "Validation Loss": 0.521313, "Validation Accuracy": 0.856597},
+        ],
+        "class_rows": [
+            {"Kelas": "ancaman", "Precision": 0.86, "Recall": 0.89, "F1-score": 0.88, "Support": 357},
+            {"Kelas": "netral", "Precision": 0.87, "Recall": 0.80, "F1-score": 0.83, "Support": 389},
+            {"Kelas": "peluang", "Precision": 0.83, "Recall": 0.87, "F1-score": 0.85, "Support": 300},
+        ],
+        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.86      0.89      0.88       357\n      netral       0.87      0.80      0.83       389\n     peluang       0.83      0.87      0.85       300\n\n    accuracy                           0.85      1046\n   macro avg       0.85      0.85      0.85      1046\nweighted avg       0.85      0.85      0.85      1046""",
+    },
 }
 
 SLANG_MAP = {
@@ -916,6 +1016,98 @@ def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
     return plotly_dark_layout(fig, height=310)
 
 
+
+
+def final_model_comparison_dataframe() -> pd.DataFrame:
+    rows = []
+    for model, result in FINAL_MODEL_RESULTS.items():
+        rows.append(
+            {
+                "Model": model,
+                "Accuracy": result["accuracy"],
+                "Macro Precision": result["macro_precision"],
+                "Macro Recall": result["macro_recall"],
+                "Macro F1": result["macro_f1"],
+                "Weighted Precision": result["weighted_precision"],
+                "Weighted Recall": result["weighted_recall"],
+                "Weighted F1": result["weighted_f1"],
+                "Catatan": result["catatan"],
+            }
+        )
+    df = pd.DataFrame(rows).sort_values("Accuracy", ascending=False).reset_index(drop=True)
+    df.insert(0, "Rank", df.index + 1)
+    return df
+
+
+def final_accuracy_chart() -> go.Figure:
+    comparison_df = final_model_comparison_dataframe().sort_values("Accuracy", ascending=True)
+    fig = go.Figure(
+        go.Bar(
+            x=comparison_df["Accuracy"],
+            y=comparison_df["Model"],
+            orientation="h",
+            marker_color=[MODEL_COLORS.get(x, "#4E79A7") for x in comparison_df["Model"]],
+            text=[f"{x:.4f} ({x*100:.2f}%)" for x in comparison_df["Accuracy"]],
+            textposition="outside",
+            textfont=dict(color="#e6edf3", size=11),
+        )
+    )
+    fig.update_xaxes(range=[0.80, 0.90], tickformat=".0%")
+    return plotly_dark_layout(fig, height=330)
+
+
+def transformer_training_chart(training_rows: List[Dict[str, float]], title: str) -> go.Figure:
+    df = pd.DataFrame(training_rows)
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=df["Epoch"],
+            y=df["Training Loss"],
+            mode="lines+markers",
+            name="Training Loss",
+            line=dict(color="#4E79A7", width=2.5),
+            marker=dict(size=8),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df["Epoch"],
+            y=df["Validation Loss"],
+            mode="lines+markers",
+            name="Validation Loss",
+            line=dict(color="#F28E2B", width=2.5, dash="dash"),
+            marker=dict(size=8),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df["Epoch"],
+            y=df["Validation Accuracy"],
+            mode="lines+markers",
+            name="Validation Accuracy",
+            line=dict(color="#59A14F", width=2.5),
+            marker=dict(size=8),
+            yaxis="y2",
+        )
+    )
+    fig.update_layout(
+        title=dict(text=title, font=dict(size=14, color="#e6edf3")),
+        yaxis2=dict(
+            overlaying="y",
+            side="right",
+            title=dict(text="Validation Accuracy", font=dict(color="#59A14F")),
+            gridcolor="rgba(0,0,0,0)",
+            tickformat=".0%",
+        ),
+    )
+    fig.update_xaxes(tickmode="array", tickvals=[1, 2, 3])
+    return plotly_dark_layout(fig, height=340)
+
+
+def transformer_metric_bar(rows: List[Dict[str, Any]]) -> go.Figure:
+    df = pd.DataFrame(rows)
+    return metrics_bar(df)
+
 def issue_chart(top_issues: pd.DataFrame, label: str) -> go.Figure:
     plot_data = (
         top_issues[top_issues["label"] == label]
@@ -1058,7 +1250,7 @@ with st.sidebar:
         ("✂️", "Data Split"),
         ("📐", "Baseline TF-IDF + SVM"),
         ("🔮", "Prediksi"),
-        ("🧠", "Transformer Opsional"),
+        ("🧠", "Hasil Transformer"),
         ("🏆", "Model Comparison"),
         ("🧩", "Isu Dominan"),
     ]
@@ -1106,8 +1298,10 @@ except Exception as exc:
 
 label_counts = processed_df["label_final"].value_counts().reindex(LABEL_ORDER).dropna()
 model_results = artifacts["results"]
-best_live_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
-best_live_accuracy = model_results[best_live_model]["accuracy"]
+best_baseline_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
+best_baseline_accuracy = model_results[best_baseline_model]["accuracy"]
+best_final_model = max(FINAL_MODEL_RESULTS.items(), key=lambda item: item[1]["accuracy"])[0]
+best_final_accuracy = FINAL_MODEL_RESULTS[best_final_model]["accuracy"]
 
 
 # -----------------------------------------------------------------------------
@@ -1146,10 +1340,10 @@ if selected_name == "Overview":
     cols = st.columns(5)
     kpis = [
         ("Total Data", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#4E79A7"),
-        ("Data Berlabel", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap model", "#59A14F"),
+        ("Data Berlabel", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap dianalisis", "#59A14F"),
         ("Kategori Label", f"{processed_df['label_final'].nunique()}", "Ancaman · Peluang · Netral", "#F28E2B"),
-        ("Best Live Model", "SVM", best_live_model.replace("TF-IDF + ", ""), "#E15759"),
-        ("Best Live Accuracy", f"{best_live_accuracy*100:.2f}%", "Dihitung saat app berjalan", "#B07AA1"),
+        ("Model Terbaik", best_final_model, "Hasil modeling Bab IV", "#E15759"),
+        ("Accuracy Terbaik", f"{best_final_accuracy*100:.2f}%", "Test set", "#B07AA1"),
     ]
     for col, (label, value, sub, color) in zip(cols, kpis):
         with col:
@@ -1157,39 +1351,32 @@ if selected_name == "Overview":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1, 1.35])
+    col_left, col_right = st.columns([1.15, 1])
     with col_left:
-        section_header("02", "Status Pipeline")
-        st.markdown(
-            f"""
-            <div class="info-card">
-                <div class="info-card-title">Pipeline yang Berjalan</div>
-                <ul style="color:#c9d1d9;font-size:0.9rem;line-height:1.9;padding-left:1.2rem;margin:0;">
-                    <li>Load dataset CSV</li>
-                    <li>Case folding</li>
-                    <li>Light normalization</li>
-                    <li>Slang normalization</li>
-                    <li>Stopword removal</li>
-                    <li>Stemming opsional</li>
-                    <li>Split 70% : 10% : 20%</li>
-                    <li>TF-IDF + LinearSVC</li>
-                </ul>
-                <p style="color:#8b949e;font-size:0.78rem;margin-top:0.8rem;margin-bottom:0;">
-                    {preprocessing_meta}
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
+        section_header("02", "Visualisasi Accuracy Model")
+        st.plotly_chart(final_accuracy_chart(), use_container_width=True)
+        insight(
+            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_final_model}</strong> "
+            f"dengan accuracy <strong>{best_final_accuracy*100:.2f}%</strong> pada test set.",
+            "success",
         )
 
     with col_right:
         section_header("03", "Distribusi Label")
         st.plotly_chart(label_distribution_chart(label_counts), use_container_width=True)
 
-    insight(
-        f"Model live terbaik pada dataset yang sedang dibaca adalah <strong>{best_live_model}</strong> "
-        f"dengan accuracy <strong>{best_live_accuracy*100:.2f}%</strong> pada test set.",
-        "success",
+    st.markdown(
+        f"""
+        <div class="info-card" style="margin-top:0.75rem;">
+            <div class="info-card-title">Catatan Overview</div>
+            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
+                Halaman overview difokuskan untuk menampilkan ringkasan hasil modeling dan distribusi label.
+                Seluruh visualisasi model Transformer tetap tersedia pada halaman detail masing-masing model
+                dan pada halaman <strong>Model Comparison</strong>.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -1362,7 +1549,7 @@ elif selected_name == "Baseline TF-IDF + SVM":
     selected_model_eval = st.selectbox(
         "Pilih skenario evaluasi",
         list(model_results.keys()),
-        index=0 if best_live_model == "TF-IDF + SVM tanpa stemming" else 1,
+        index=0 if best_baseline_model == "TF-IDF + SVM tanpa stemming" else 1,
     )
     selected_result = model_results[selected_model_eval]
     report_df = report_to_dataframe(selected_result["report_dict"])
@@ -1398,10 +1585,10 @@ elif selected_name == "Prediksi":
     st.markdown(
         """
         <div class="info-card">
-            <div class="info-card-title">Model Deployment Aktif</div>
+            <div class="info-card-title">Model Prediksi Interaktif</div>
             <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
-                Halaman ini memakai model TF-IDF + SVM yang dilatih langsung dari dataset saat app berjalan.
-                Ini adalah versi deployable yang ringan untuk GitHub + Streamlit Cloud.
+                Halaman ini memakai model TF-IDF + SVM untuk memprediksi sentimen dari teks tweet baru.
+                Hasil prediksi ditampilkan sebagai fitur tambahan dashboard agar modeling dapat dicoba secara interaktif.
             </p>
         </div>
         """,
@@ -1443,115 +1630,87 @@ elif selected_name == "Prediksi":
                 st.code(pred["model_text"])
 
 
-elif selected_name == "Transformer Opsional":
-    section_header("09", "Fine-Tuning Transformer Opsional")
-
-    st.warning(
-        "Fine-tuning IndoBERT/IndoBERTweet tidak dijalankan otomatis saat app dibuka karena berat untuk deployment. "
-        "Gunakan tombol di bawah hanya jika environment Streamlit punya resource dan dependency yang cukup."
-    )
-
-    col_a, col_b = st.columns(2)
-    with col_a:
-        transformer_choice = st.selectbox(
-            "Pilih skenario",
-            [
-                "IndoBERT",
-                "IndoBERTweet",
-                "IndoBERTweet tanpa normalisasi",
-            ],
-        )
-    with col_b:
-        epochs = st.number_input("Epoch", min_value=1, max_value=5, value=1, step=1)
-
-    batch_size = st.selectbox("Batch size", [4, 8, 16], index=1)
-
-    if transformer_choice == "IndoBERT":
-        hf_model_name = "indobenchmark/indobert-base-p1"
-        text_col = "text_light_normalized"
-    elif transformer_choice == "IndoBERTweet":
-        hf_model_name = "indolem/indobertweet-base-uncased"
-        text_col = "text_light_normalized"
-    else:
-        hf_model_name = "indolem/indobertweet-base-uncased"
-        processed_df["text_for_indobertweet_raw"] = processed_df["full_text"].astype(str).apply(lambda x: re.sub(r"\s+", " ", x).strip())
-        artifacts["df_model"]["text_for_indobertweet_raw"] = processed_df.loc[artifacts["df_model"].index, "text_for_indobertweet_raw"]
-        text_col = "text_for_indobertweet_raw"
+elif selected_name == "Hasil Transformer":
+    section_header("09", "Visualisasi Hasil Modeling Transformer")
 
     st.markdown(
-        f"""
+        """
         <div class="info-card">
-            <div class="info-card-title">Konfigurasi</div>
-            <ul style="color:#c9d1d9;font-size:0.9rem;line-height:1.9;padding-left:1.2rem;margin:0;">
-                <li>Model Hugging Face: <code>{hf_model_name}</code></li>
-                <li>Input column: <code>{text_col}</code></li>
-                <li>Epoch: {epochs}</li>
-                <li>Batch size: {batch_size}</li>
-            </ul>
+            <div class="info-card-title">Fokus Halaman</div>
+            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
+                Halaman ini menampilkan hasil modeling Transformer dari notebook Bab IV dalam bentuk dashboard:
+                kurva training, accuracy, classification report, dan metrik per kelas untuk IndoBERT,
+                IndoBERTweet, serta IndoBERTweet tanpa normalisasi.
+            </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    if st.button("Jalankan Fine-Tuning Transformer Sekarang", type="primary", use_container_width=True):
-        try:
-            with st.spinner("Training Transformer berjalan. Jangan refresh halaman sampai selesai."):
-                start = time.time()
-                transformer_result = train_transformer_optional(
-                    model_name=hf_model_name,
-                    text_col=text_col,
-                    df_model=artifacts["df_model"],
-                    train_idx=artifacts["train_idx"],
-                    val_idx=artifacts["val_idx"],
-                    test_idx=artifacts["test_idx"],
-                    epochs=int(epochs),
-                    batch_size=int(batch_size),
-                )
-                transformer_result["elapsed_seconds"] = time.time() - start
-                st.session_state.setdefault("transformer_results", {})
-                st.session_state["transformer_results"][transformer_choice] = transformer_result
+    transformer_choice = st.selectbox(
+        "Pilih skenario Transformer",
+        list(TRANSFORMER_RESULTS.keys()),
+        index=0,
+    )
+    transformer_detail = TRANSFORMER_RESULTS[transformer_choice]
 
-            st.success(
-                f"Training selesai. Accuracy {transformer_choice}: "
-                f"{transformer_result['accuracy']*100:.2f}% "
-                f"({transformer_result['elapsed_seconds']/60:.1f} menit)."
-            )
-        except Exception as exc:
-            st.error("Training Transformer belum berhasil dijalankan di environment ini.")
-            st.exception(exc)
+    cols = st.columns(4)
+    with cols[0]:
+        kpi_card("Model", transformer_choice, transformer_detail["model_hf"], MODEL_COLORS.get(transformer_choice, "#E15759"))
+    with cols[1]:
+        kpi_card("Accuracy", f"{transformer_detail['accuracy']*100:.2f}%", "Test set", "#59A14F")
+    with cols[2]:
+        kpi_card("Epoch", "3", "Training notebook", "#F28E2B")
+    with cols[3]:
+        kpi_card("Input Teks", transformer_detail["input_col"], "Kolom model", "#B07AA1")
 
-    transformer_results = st.session_state.get("transformer_results", {})
-    if transformer_results:
-        st.markdown("#### Hasil Transformer pada Session Ini")
-        rows = [{"Model": k, "Accuracy": v["accuracy"], "Output Dir": v.get("output_dir", "-")} for k, v in transformer_results.items()]
-        st.dataframe(pd.DataFrame(rows).style.format({"Accuracy": "{:.4f}"}), use_container_width=True, hide_index=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    tab_curve, tab_report, tab_metric = st.tabs(["📈 Kurva Training", "📋 Classification Report", "📊 Metrik per Kelas"])
+
+    with tab_curve:
+        st.plotly_chart(
+            transformer_training_chart(transformer_detail["training"], f"{transformer_choice} - Loss dan Validation Accuracy"),
+            use_container_width=True,
+        )
+        st.dataframe(
+            pd.DataFrame(transformer_detail["training"]).style.format({
+                "Training Loss": "{:.6f}",
+                "Validation Loss": "{:.6f}",
+                "Validation Accuracy": "{:.6f}",
+            }),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with tab_report:
+        st.markdown(f'<div class="code-output">{transformer_detail["report_text"]}</div>', unsafe_allow_html=True)
+
+    with tab_metric:
+        report_df = pd.DataFrame(transformer_detail["class_rows"])
+        st.plotly_chart(transformer_metric_bar(transformer_detail["class_rows"]), use_container_width=True)
+        st.dataframe(
+            report_df.style.format({
+                "Precision": "{:.2f}",
+                "Recall": "{:.2f}",
+                "F1-score": "{:.2f}",
+                "Support": "{:,.0f}",
+            }),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    insight(
+        "IndoBERT memperoleh performa tertinggi pada hasil modeling, sedangkan IndoBERTweet dan "
+        "IndoBERTweet tanpa normalisasi tetap kompetitif pada data tweet berbahasa Indonesia.",
+        "success" if transformer_choice == "IndoBERT" else "",
+    )
 
 
 elif selected_name == "Model Comparison":
-    section_header("10", "Perbandingan Model")
+    section_header("10", "Perbandingan Semua Model")
 
-    rows = [
-        {
-            "Model": name,
-            "Accuracy": result["accuracy"],
-            "Sumber": "Live training saat app berjalan",
-            "Catatan": "TF-IDF + LinearSVC",
-        }
-        for name, result in model_results.items()
-    ]
-
-    for name, result in st.session_state.get("transformer_results", {}).items():
-        rows.append(
-            {
-                "Model": name,
-                "Accuracy": result["accuracy"],
-                "Sumber": "Fine-tuning Transformer pada session Streamlit ini",
-                "Catatan": result.get("model_name", ""),
-            }
-        )
-
-    comparison_df = pd.DataFrame(rows).sort_values("Accuracy", ascending=False).reset_index(drop=True)
-    comparison_df.insert(0, "Rank", comparison_df.index + 1)
+    comparison_df = final_model_comparison_dataframe()
 
     cols = st.columns(4)
     with cols[0]:
@@ -1559,35 +1718,60 @@ elif selected_name == "Model Comparison":
     with cols[1]:
         kpi_card("Best Accuracy", f"{comparison_df.loc[0, 'Accuracy']*100:.2f}%", "Test set", "#59A14F")
     with cols[2]:
-        kpi_card("Model Aktif", str(len(comparison_df)), "Live comparison", "#4E79A7")
+        kpi_card("Skenario Model", str(len(comparison_df)), "Baseline + Transformer", "#4E79A7")
     with cols[3]:
         kpi_card("Dataset", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#F28E2B")
 
     st.markdown("<br>", unsafe_allow_html=True)
+    st.plotly_chart(final_accuracy_chart(), use_container_width=True)
+
+    st.markdown("#### Tabel Evaluasi Utama")
+    metric_cols = [
+        "Accuracy",
+        "Macro Precision",
+        "Macro Recall",
+        "Macro F1",
+        "Weighted Precision",
+        "Weighted Recall",
+        "Weighted F1",
+    ]
     st.dataframe(
-        comparison_df.style.format({"Accuracy": "{:.4f}"}),
+        comparison_df.style.format({col: "{:.4f}" if col == "Accuracy" else "{:.2f}" for col in metric_cols}),
         use_container_width=True,
         hide_index=True,
     )
 
-    fig = go.Figure(
-        go.Bar(
-            x=comparison_df.sort_values("Accuracy")["Accuracy"],
-            y=comparison_df.sort_values("Accuracy")["Model"],
-            orientation="h",
-            marker_color=[MODEL_COLORS.get(x, "#4E79A7") for x in comparison_df.sort_values("Accuracy")["Model"]],
-            text=[f"{x:.4f}" for x in comparison_df.sort_values("Accuracy")["Accuracy"]],
-            textposition="outside",
-            textfont=dict(color="#e6edf3"),
-        )
-    )
-    st.plotly_chart(plotly_dark_layout(fig, height=330), use_container_width=True)
+    st.markdown("#### Detail Model")
+    selected_model = st.selectbox("Pilih model", comparison_df["Model"].tolist(), index=0)
+
+    if selected_model in TRANSFORMER_RESULTS:
+        detail = TRANSFORMER_RESULTS[selected_model]
+        detail_rows = pd.DataFrame(detail["class_rows"])
+        col_l, col_r = st.columns([1, 1.25])
+        with col_l:
+            st.markdown(f'<div class="code-output">{detail["report_text"]}</div>', unsafe_allow_html=True)
+        with col_r:
+            st.plotly_chart(transformer_metric_bar(detail["class_rows"]), use_container_width=True)
+            st.dataframe(detail_rows, use_container_width=True, hide_index=True)
+    else:
+        if selected_model in model_results:
+            selected_result = model_results[selected_model]
+            report_df = report_to_dataframe(selected_result["report_dict"])
+            col_l, col_r = st.columns([1, 1.25])
+            with col_l:
+                st.markdown(f'<div class="code-output">{selected_result["report_text"]}</div>', unsafe_allow_html=True)
+            with col_r:
+                st.plotly_chart(metrics_bar(report_df), use_container_width=True)
+                st.dataframe(report_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("Detail baseline mengikuti hasil evaluasi pada halaman Baseline TF-IDF + SVM.")
 
     insight(
-        "Perbandingan ini memprioritaskan hasil yang benar-benar dihitung saat aplikasi berjalan. "
-        "Jika Transformer belum dijalankan di halaman opsional, tabel hanya menampilkan baseline SVM live.",
-        "warning",
+        "Hasil perbandingan menunjukkan IndoBERT sebagai model dengan performa terbaik, "
+        "diikuti IndoBERTweet dan IndoBERTweet tanpa normalisasi.",
+        "success",
     )
+
 
 
 elif selected_name == "Isu Dominan":
