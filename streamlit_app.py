@@ -1052,7 +1052,7 @@ def transformer_training_chart(training_rows: List[Dict[str, float]], title: str
     return plotly_dark_layout(fig, height=330)
 
 
-def class_metrics_bar(rows: List[Dict[str, Any]], title: str) -> go.Figure:
+def class_metrics_bar(rows: List[Dict[str, Any]], title: str, height: int = 300) -> go.Figure:
     df = pd.DataFrame(rows)
     fig = go.Figure()
     fig.add_trace(go.Bar(name="Precision", x=df["Kelas"], y=df["Precision"], marker_color="#4E79A7"))
@@ -1060,7 +1060,7 @@ def class_metrics_bar(rows: List[Dict[str, Any]], title: str) -> go.Figure:
     fig.add_trace(go.Bar(name="F1-score", x=df["Kelas"], y=df["F1-score"], marker_color="#59A14F"))
     fig.update_layout(barmode="group", title=dict(text=title, font=dict(color="#111827", size=14)))
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
-    return plotly_dark_layout(fig, height=300)
+    return plotly_dark_layout(fig, height=height)
 
 
 def split_distribution_chart(split_df: pd.DataFrame) -> go.Figure:
@@ -1109,18 +1109,21 @@ def accuracy_chart(results: Dict[str, Any]) -> go.Figure:
     return plotly_dark_layout(fig, height=280)
 
 
-def confusion_matrix_figure(cm: np.ndarray, title: str) -> go.Figure:
+def confusion_matrix_figure(cm: np.ndarray, title: str, height: int = 360) -> go.Figure:
     fig = px.imshow(
         cm,
         x=LABEL_ORDER,
         y=LABEL_ORDER,
         text_auto=True,
         color_continuous_scale="Blues",
-        aspect="auto",
+        aspect="equal",
         labels=dict(x="Prediksi", y="Label Aktual", color="Jumlah"),
     )
-    fig.update_layout(title=dict(text=title, font=dict(color="#111827", size=14)))
-    return plotly_dark_layout(fig, height=380)
+    fig.update_layout(
+        title=dict(text=title, font=dict(color="#111827", size=14)),
+        margin=dict(l=40, r=20, t=50, b=45),
+    )
+    return plotly_dark_layout(fig, height=height)
 
 
 def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
@@ -1681,7 +1684,7 @@ elif selected_name == "Hasil Transformer":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1.05, 1])
+    col_left, col_right = st.columns([1.15, 0.85])
     with col_left:
         st.markdown("#### Kurva Training")
         st.plotly_chart(
@@ -1693,17 +1696,22 @@ elif selected_name == "Hasil Transformer":
         )
 
     with col_right:
-        st.markdown("#### Metrik per Kelas")
+        st.markdown("#### Confusion Matrix")
         st.plotly_chart(
-            class_metrics_bar(rows, f"{selected_transformer} — Precision, Recall, F1-score"),
+            confusion_matrix_figure(
+                TRANSFORMER_CONFUSION_MATRICES[selected_transformer],
+                f"Confusion Matrix - {selected_transformer}",
+                height=330,
+            ),
             use_container_width=True,
         )
 
-    st.markdown("#### Confusion Matrix")
+    st.markdown("#### Metrik per Kelas")
     st.plotly_chart(
-        confusion_matrix_figure(
-            TRANSFORMER_CONFUSION_MATRICES[selected_transformer],
-            f"Confusion Matrix - {selected_transformer}",
+        class_metrics_bar(
+            rows,
+            f"{selected_transformer} — Precision, Recall, F1-score",
+            height=360,
         ),
         use_container_width=True,
     )
