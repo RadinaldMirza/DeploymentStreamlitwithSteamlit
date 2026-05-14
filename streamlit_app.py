@@ -72,49 +72,49 @@ LABEL_COLORS = {
 # Nilai ini ditampilkan untuk visualisasi dashboard, bukan untuk menjalankan fine-tuning ulang.
 RESEARCH_MODEL_RESULTS = {
     "TF-IDF + SVM tanpa stemming": {
-        "accuracy": 0.823177,
-        "macro_precision": 0.82,
-        "macro_recall": 0.83,
-        "macro_f1": 0.82,
-        "weighted_precision": 0.82,
-        "weighted_recall": 0.82,
-        "weighted_f1": 0.82,
+        "accuracy": 0.8413,
+        "macro_precision": 0.84,
+        "macro_recall": 0.84,
+        "macro_f1": 0.84,
+        "weighted_precision": 0.84,
+        "weighted_recall": 0.84,
+        "weighted_f1": 0.84,
     },
     "TF-IDF + SVM dengan stemming": {
-        "accuracy": 0.817183,
-        "macro_precision": 0.81,
-        "macro_recall": 0.82,
-        "macro_f1": 0.82,
-        "weighted_precision": 0.82,
-        "weighted_recall": 0.82,
-        "weighted_f1": 0.82,
+        "accuracy": 0.8279,
+        "macro_precision": 0.83,
+        "macro_recall": 0.83,
+        "macro_f1": 0.83,
+        "weighted_precision": 0.83,
+        "weighted_recall": 0.83,
+        "weighted_f1": 0.83,
     },
     "IndoBERT": {
-        "accuracy": 0.849151,
+        "accuracy": 0.8767,
+        "macro_precision": 0.88,
+        "macro_recall": 0.88,
+        "macro_f1": 0.88,
+        "weighted_precision": 0.88,
+        "weighted_recall": 0.88,
+        "weighted_f1": 0.88,
+    },
+    "IndoBERTweet": {
+        "accuracy": 0.8528,
+        "macro_precision": 0.85,
+        "macro_recall": 0.86,
+        "macro_f1": 0.85,
+        "weighted_precision": 0.86,
+        "weighted_recall": 0.85,
+        "weighted_f1": 0.85,
+    },
+    "IndoBERTweet tanpa normalisasi": {
+        "accuracy": 0.8518,
         "macro_precision": 0.85,
         "macro_recall": 0.85,
         "macro_f1": 0.85,
         "weighted_precision": 0.85,
         "weighted_recall": 0.85,
         "weighted_f1": 0.85,
-    },
-    "IndoBERTweet": {
-        "accuracy": 0.833167,
-        "macro_precision": 0.83,
-        "macro_recall": 0.84,
-        "macro_f1": 0.83,
-        "weighted_precision": 0.83,
-        "weighted_recall": 0.83,
-        "weighted_f1": 0.83,
-    },
-    "IndoBERTweet tanpa normalisasi": {
-        "accuracy": 0.831169,
-        "macro_precision": 0.83,
-        "macro_recall": 0.84,
-        "macro_f1": 0.83,
-        "weighted_precision": 0.83,
-        "weighted_recall": 0.83,
-        "weighted_f1": 0.83,
     },
 }
 
@@ -138,20 +138,38 @@ TRANSFORMER_TRAINING = {
 
 TRANSFORMER_CLASS_REPORTS = {
     "IndoBERT": [
-        {"Kelas": "Ancaman", "Precision": 0.82, "Recall": 0.93, "F1-score": 0.87, "Support": 345},
-        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.81, "F1-score": 0.84, "Support": 414},
-        {"Kelas": "Peluang", "Precision": 0.86, "Recall": 0.81, "F1-score": 0.83, "Support": 242},
+        {"Kelas": "Ancaman", "Precision": 0.87, "Recall": 0.91, "F1-score": 0.89, "Support": 357},
+        {"Kelas": "Netral", "Precision": 0.89, "Recall": 0.84, "F1-score": 0.86, "Support": 389},
+        {"Kelas": "Peluang", "Precision": 0.87, "Recall": 0.89, "F1-score": 0.88, "Support": 300},
     ],
     "IndoBERTweet": [
-        {"Kelas": "Ancaman", "Precision": 0.84, "Recall": 0.88, "F1-score": 0.86, "Support": 345},
-        {"Kelas": "Netral", "Precision": 0.86, "Recall": 0.78, "F1-score": 0.82, "Support": 414},
-        {"Kelas": "Peluang", "Precision": 0.79, "Recall": 0.86, "F1-score": 0.82, "Support": 242},
+        {"Kelas": "Ancaman", "Precision": 0.84, "Recall": 0.92, "F1-score": 0.88, "Support": 357},
+        {"Kelas": "Netral", "Precision": 0.89, "Recall": 0.78, "F1-score": 0.83, "Support": 389},
+        {"Kelas": "Peluang", "Precision": 0.83, "Recall": 0.86, "F1-score": 0.84, "Support": 300},
     ],
     "IndoBERTweet tanpa normalisasi": [
-        {"Kelas": "Ancaman", "Precision": 0.83, "Recall": 0.89, "F1-score": 0.86, "Support": 345},
-        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.77, "F1-score": 0.81, "Support": 414},
-        {"Kelas": "Peluang", "Precision": 0.78, "Recall": 0.86, "F1-score": 0.82, "Support": 242},
+        {"Kelas": "Ancaman", "Precision": 0.86, "Recall": 0.89, "F1-score": 0.88, "Support": 357},
+        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.80, "F1-score": 0.83, "Support": 389},
+        {"Kelas": "Peluang", "Precision": 0.83, "Recall": 0.87, "F1-score": 0.85, "Support": 300},
     ],
+}
+
+TRANSFORMER_CONFUSION_MATRICES = {
+    "IndoBERT": np.array([
+        [325, 12, 20],
+        [14, 266, 20],
+        [34, 29, 326],
+    ]),
+    "IndoBERTweet": np.array([
+        [329, 12, 16],
+        [20, 258, 22],
+        [43, 41, 305],
+    ]),
+    "IndoBERTweet tanpa normalisasi": np.array([
+        [319, 11, 27],
+        [18, 261, 21],
+        [35, 43, 311],
+    ]),
 }
 
 SLANG_MAP = {
@@ -1680,6 +1698,15 @@ elif selected_name == "Hasil Transformer":
             class_metrics_bar(rows, f"{selected_transformer} — Precision, Recall, F1-score"),
             use_container_width=True,
         )
+
+    st.markdown("#### Confusion Matrix")
+    st.plotly_chart(
+        confusion_matrix_figure(
+            TRANSFORMER_CONFUSION_MATRICES[selected_transformer],
+            f"Confusion Matrix - {selected_transformer}",
+        ),
+        use_container_width=True,
+    )
 
     st.markdown("#### Classification Report")
     report_df = pd.DataFrame(rows)
