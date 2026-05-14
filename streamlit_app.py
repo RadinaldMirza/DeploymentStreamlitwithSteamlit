@@ -1,14 +1,18 @@
 """
-AI Work Sentiment Dashboard - Streamlit App
+AI Work Sentiment Dashboard - Streamlit Deployable App
 
-Dashboard skripsi untuk visualisasi hasil modeling analisis sentimen publik
-terhadap Artificial Intelligence dalam dunia kerja berbasis pengetahuan
+Dashboard skripsi untuk visualisasi dan deployment modeling analisis sentimen
+publik terhadap Artificial Intelligence dalam dunia kerja berbasis pengetahuan
 di Indonesia.
 
 Versi ini tidak lagi membaca file HTML hasil export notebook. App membaca
-Dataset Final.csv, menjalankan preprocessing, data splitting, TF-IDF feature
-extraction, evaluasi baseline SVM, prediksi interaktif, serta menampilkan
-visualisasi hasil modeling Transformer dari notebook Bab IV.
+Dataset Final.csv, menjalankan preprocessing, split data, feature extraction,
+training baseline TF-IDF + SVM, evaluasi, dan prediksi secara langsung saat
+Streamlit berjalan.
+
+Catatan:
+- Dashboard difokuskan untuk visualisasi hasil modeling skripsi.
+- Transformer tidak di-fine-tuning ulang di Streamlit Cloud agar aplikasi stabil saat deploy.
 """
 
 from __future__ import annotations
@@ -64,109 +68,90 @@ LABEL_COLORS = {
     "netral": "#4E79A7",
 }
 
-
-FINAL_MODEL_RESULTS = {
+# Hasil modeling Bab IV dari notebook skripsi.
+# Nilai ini ditampilkan untuk visualisasi dashboard, bukan untuk menjalankan fine-tuning ulang.
+RESEARCH_MODEL_RESULTS = {
     "TF-IDF + SVM tanpa stemming": {
-        "accuracy": 0.841300,
-        "macro_precision": 0.84,
-        "macro_recall": 0.84,
-        "macro_f1": 0.84,
-        "weighted_precision": 0.84,
-        "weighted_recall": 0.84,
-        "weighted_f1": 0.84,
-        "catatan": "Baseline TF-IDF + SVM tanpa stemming",
+        "accuracy": 0.823177,
+        "macro_precision": 0.82,
+        "macro_recall": 0.83,
+        "macro_f1": 0.82,
+        "weighted_precision": 0.82,
+        "weighted_recall": 0.82,
+        "weighted_f1": 0.82,
     },
     "TF-IDF + SVM dengan stemming": {
-        "accuracy": 0.827916,
-        "macro_precision": 0.83,
-        "macro_recall": 0.83,
-        "macro_f1": 0.83,
-        "weighted_precision": 0.83,
-        "weighted_recall": 0.83,
-        "weighted_f1": 0.83,
-        "catatan": "Baseline TF-IDF + SVM dengan stemming",
+        "accuracy": 0.817183,
+        "macro_precision": 0.81,
+        "macro_recall": 0.82,
+        "macro_f1": 0.82,
+        "weighted_precision": 0.82,
+        "weighted_recall": 0.82,
+        "weighted_f1": 0.82,
     },
     "IndoBERT": {
-        "accuracy": 0.876673,
-        "macro_precision": 0.88,
-        "macro_recall": 0.88,
-        "macro_f1": 0.88,
-        "weighted_precision": 0.88,
-        "weighted_recall": 0.88,
-        "weighted_f1": 0.88,
-        "catatan": "Fine-tuning IndoBERT",
-    },
-    "IndoBERTweet": {
-        "accuracy": 0.852772,
-        "macro_precision": 0.85,
-        "macro_recall": 0.86,
-        "macro_f1": 0.85,
-        "weighted_precision": 0.86,
-        "weighted_recall": 0.85,
-        "weighted_f1": 0.85,
-        "catatan": "Fine-tuning IndoBERTweet dengan text_light_normalized",
-    },
-    "IndoBERTweet tanpa normalisasi": {
-        "accuracy": 0.851816,
+        "accuracy": 0.849151,
         "macro_precision": 0.85,
         "macro_recall": 0.85,
         "macro_f1": 0.85,
         "weighted_precision": 0.85,
         "weighted_recall": 0.85,
         "weighted_f1": 0.85,
-        "catatan": "Fine-tuning IndoBERTweet dengan full_text",
+    },
+    "IndoBERTweet": {
+        "accuracy": 0.833167,
+        "macro_precision": 0.83,
+        "macro_recall": 0.84,
+        "macro_f1": 0.83,
+        "weighted_precision": 0.83,
+        "weighted_recall": 0.83,
+        "weighted_f1": 0.83,
+    },
+    "IndoBERTweet tanpa normalisasi": {
+        "accuracy": 0.831169,
+        "macro_precision": 0.83,
+        "macro_recall": 0.84,
+        "macro_f1": 0.83,
+        "weighted_precision": 0.83,
+        "weighted_recall": 0.83,
+        "weighted_f1": 0.83,
     },
 }
 
-TRANSFORMER_RESULTS = {
-    "IndoBERT": {
-        "model_hf": "indobenchmark/indobert-base-p1",
-        "input_col": "text_light_normalized",
-        "accuracy": 0.876673,
-        "training": [
-            {"Epoch": 1, "Training Loss": 0.590066, "Validation Loss": 0.480768, "Validation Accuracy": 0.858509},
-            {"Epoch": 2, "Training Loss": 0.343443, "Validation Loss": 0.445905, "Validation Accuracy": 0.864245},
-            {"Epoch": 3, "Training Loss": 0.209075, "Validation Loss": 0.514817, "Validation Accuracy": 0.869981},
-        ],
-        "class_rows": [
-            {"Kelas": "ancaman", "Precision": 0.87, "Recall": 0.91, "F1-score": 0.89, "Support": 357},
-            {"Kelas": "netral", "Precision": 0.89, "Recall": 0.84, "F1-score": 0.86, "Support": 389},
-            {"Kelas": "peluang", "Precision": 0.87, "Recall": 0.89, "F1-score": 0.88, "Support": 300},
-        ],
-        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.87      0.91      0.89       357\n      netral       0.89      0.84      0.86       389\n     peluang       0.87      0.89      0.88       300\n\n    accuracy                           0.88      1046\n   macro avg       0.88      0.88      0.88      1046\nweighted avg       0.88      0.88      0.88      1046""",
-    },
-    "IndoBERTweet": {
-        "model_hf": "indolem/indobertweet-base-uncased",
-        "input_col": "text_light_normalized",
-        "accuracy": 0.852772,
-        "training": [
-            {"Epoch": 1, "Training Loss": 0.646081, "Validation Loss": 0.486924, "Validation Accuracy": 0.831740},
-            {"Epoch": 2, "Training Loss": 0.372374, "Validation Loss": 0.514493, "Validation Accuracy": 0.837476},
-            {"Epoch": 3, "Training Loss": 0.255556, "Validation Loss": 0.562762, "Validation Accuracy": 0.847036},
-        ],
-        "class_rows": [
-            {"Kelas": "ancaman", "Precision": 0.84, "Recall": 0.92, "F1-score": 0.88, "Support": 357},
-            {"Kelas": "netral", "Precision": 0.89, "Recall": 0.78, "F1-score": 0.83, "Support": 389},
-            {"Kelas": "peluang", "Precision": 0.83, "Recall": 0.86, "F1-score": 0.84, "Support": 300},
-        ],
-        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.84      0.92      0.88       357\n      netral       0.89      0.78      0.83       389\n     peluang       0.83      0.86      0.84       300\n\n    accuracy                           0.85      1046\n   macro avg       0.85      0.86      0.85      1046\nweighted avg       0.86      0.85      0.85      1046""",
-    },
-    "IndoBERTweet tanpa normalisasi": {
-        "model_hf": "indolem/indobertweet-base-uncased",
-        "input_col": "full_text",
-        "accuracy": 0.851816,
-        "training": [
-            {"Epoch": 1, "Training Loss": 0.646134, "Validation Loss": 0.473880, "Validation Accuracy": 0.839388},
-            {"Epoch": 2, "Training Loss": 0.377521, "Validation Loss": 0.492793, "Validation Accuracy": 0.837476},
-            {"Epoch": 3, "Training Loss": 0.251278, "Validation Loss": 0.521313, "Validation Accuracy": 0.856597},
-        ],
-        "class_rows": [
-            {"Kelas": "ancaman", "Precision": 0.86, "Recall": 0.89, "F1-score": 0.88, "Support": 357},
-            {"Kelas": "netral", "Precision": 0.87, "Recall": 0.80, "F1-score": 0.83, "Support": 389},
-            {"Kelas": "peluang", "Precision": 0.83, "Recall": 0.87, "F1-score": 0.85, "Support": 300},
-        ],
-        "report_text": """              precision    recall  f1-score   support\n\n     ancaman       0.86      0.89      0.88       357\n      netral       0.87      0.80      0.83       389\n     peluang       0.83      0.87      0.85       300\n\n    accuracy                           0.85      1046\n   macro avg       0.85      0.85      0.85      1046\nweighted avg       0.85      0.85      0.85      1046""",
-    },
+TRANSFORMER_TRAINING = {
+    "IndoBERT": [
+        {"Epoch": 1, "Training Loss": 0.619223, "Validation Loss": 0.445345, "Validation Accuracy": 0.832},
+        {"Epoch": 2, "Training Loss": 0.390263, "Validation Loss": 0.430128, "Validation Accuracy": 0.866},
+        {"Epoch": 3, "Training Loss": 0.267085, "Validation Loss": 0.479817, "Validation Accuracy": 0.858},
+    ],
+    "IndoBERTweet": [
+        {"Epoch": 1, "Training Loss": 0.698857, "Validation Loss": 0.556220, "Validation Accuracy": 0.780},
+        {"Epoch": 2, "Training Loss": 0.422145, "Validation Loss": 0.472993, "Validation Accuracy": 0.842},
+        {"Epoch": 3, "Training Loss": 0.298713, "Validation Loss": 0.499404, "Validation Accuracy": 0.844},
+    ],
+    "IndoBERTweet tanpa normalisasi": [
+        {"Epoch": 1, "Training Loss": 0.691702, "Validation Loss": 0.533993, "Validation Accuracy": 0.794},
+        {"Epoch": 2, "Training Loss": 0.405936, "Validation Loss": 0.464697, "Validation Accuracy": 0.852},
+        {"Epoch": 3, "Training Loss": 0.284906, "Validation Loss": 0.491821, "Validation Accuracy": 0.856},
+    ],
+}
+
+TRANSFORMER_CLASS_REPORTS = {
+    "IndoBERT": [
+        {"Kelas": "Ancaman", "Precision": 0.82, "Recall": 0.93, "F1-score": 0.87, "Support": 345},
+        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.81, "F1-score": 0.84, "Support": 414},
+        {"Kelas": "Peluang", "Precision": 0.86, "Recall": 0.81, "F1-score": 0.83, "Support": 242},
+    ],
+    "IndoBERTweet": [
+        {"Kelas": "Ancaman", "Precision": 0.84, "Recall": 0.88, "F1-score": 0.86, "Support": 345},
+        {"Kelas": "Netral", "Precision": 0.86, "Recall": 0.78, "F1-score": 0.82, "Support": 414},
+        {"Kelas": "Peluang", "Precision": 0.79, "Recall": 0.86, "F1-score": 0.82, "Support": 242},
+    ],
+    "IndoBERTweet tanpa normalisasi": [
+        {"Kelas": "Ancaman", "Precision": 0.83, "Recall": 0.89, "F1-score": 0.86, "Support": 345},
+        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.77, "F1-score": 0.81, "Support": 414},
+        {"Kelas": "Peluang", "Precision": 0.78, "Recall": 0.86, "F1-score": 0.82, "Support": 242},
+    ],
 }
 
 SLANG_MAP = {
@@ -215,12 +200,13 @@ st.markdown(
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg-primary: #0d1117;
-    --bg-card: #161b22;
-    --bg-card-hover: #1c2128;
-    --border: #30363d;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f9fafb;
+    --border: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
     --accent-red: #E15759;
     --accent-blue: #4E79A7;
     --accent-green: #59A14F;
@@ -235,11 +221,11 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background: linear-gradient(135deg, #0d1117 0%, #0f1923 50%, #0d1117 100%);
+    background: #ffffff;
 }
 
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0d1117 0%, #111827 100%);
+    background: #f8fafc;
     border-right: 1px solid var(--border);
 }
 
@@ -248,29 +234,31 @@ html, body, [class*="css"] {
 }
 
 .kpi-card {
-    background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-    border: 1px solid #30363d;
-    border-radius: 12px;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 14px;
     padding: 1.25rem 1.5rem;
     text-align: center;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
     min-height: 132px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
 }
 
 .kpi-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 3px;
+    height: 4px;
     background: var(--accent-color, #4E79A7);
-    border-radius: 12px 12px 0 0;
+    border-radius: 14px 14px 0 0;
 }
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    border-color: #484f58;
+    border-color: #d1d5db !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
 }
 
 .kpi-label {
@@ -278,7 +266,7 @@ html, body, [class*="css"] {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #6b7280 !important;
     margin-bottom: 0.45rem;
 }
 
@@ -287,12 +275,12 @@ html, body, [class*="css"] {
     font-size: 2rem;
     font-weight: 400;
     line-height: 1.2;
-    color: #e6edf3;
+    color: #111827 !important;
 }
 
 .kpi-sub {
     font-size: 0.72rem;
-    color: #8b949e;
+    color: #6b7280 !important;
     margin-top: 0.35rem;
 }
 
@@ -302,32 +290,39 @@ html, body, [class*="css"] {
     gap: 0.75rem;
     margin-bottom: 1.25rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid #30363d;
+    border-bottom: 1px solid #e5e7eb !important;
 }
 
 .section-badge {
-    background: #21262d;
-    border: 1px solid #30363d;
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
     border-radius: 6px;
     padding: 0.2rem 0.6rem;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #6b7280 !important;
 }
 
 .section-title {
     font-family: 'DM Serif Display', serif;
     font-size: 1.6rem;
-    color: #e6edf3;
+    color: #111827 !important;
     margin: 0;
 }
 
+.info-card,
+.best-model-card,
+[data-testid="metric-container"],
+details {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
 .info-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
     padding: 1.25rem;
     margin-bottom: 1rem;
 }
@@ -337,14 +332,11 @@ html, body, [class*="css"] {
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #6b7280 !important;
     margin-bottom: 0.6rem;
 }
 
 .best-model-card {
-    background: linear-gradient(135deg, #1a1f2e 0%, #1c2030 100%);
-    border: 1px solid #E15759;
-    border-radius: 12px;
     padding: 1.5rem;
     text-align: center;
     position: relative;
@@ -353,7 +345,7 @@ html, body, [class*="css"] {
 .best-badge {
     display: inline-block;
     background: #E15759;
-    color: white;
+    color: white !important;
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.1em;
@@ -364,50 +356,50 @@ html, body, [class*="css"] {
 }
 
 .code-output {
-    background: #0d1117;
-    border: 1px solid #30363d;
+    background: #f8fafc !important;
+    border: 1px solid #e5e7eb !important;
     border-radius: 8px;
     padding: 1rem;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.78rem;
     line-height: 1.7;
-    color: #adbac7;
+    color: #374151 !important;
     overflow-x: auto;
     white-space: pre;
 }
 
 .insight-box {
-    background: linear-gradient(135deg, #1a2233 0%, #182032 100%);
-    border-left: 3px solid #4E79A7;
-    border-radius: 0 8px 8px 0;
+    background: #eff6ff !important;
+    border-left: 4px solid #4E79A7;
+    border-radius: 0 10px 10px 0;
     padding: 0.9rem 1.1rem;
     margin: 0.75rem 0;
     font-size: 0.9rem;
     line-height: 1.6;
-    color: #c9d1d9;
+    color: #1f2937 !important;
 }
 
 .insight-box.warning {
     border-left-color: #F0C040;
-    background: linear-gradient(135deg, #1f1e0d 0%, #1e1b00 100%);
+    background: #fffbeb !important;
 }
 
 .insight-box.success {
     border-left-color: #59A14F;
-    background: linear-gradient(135deg, #0f1f0d 0%, #0a1a08 100%);
+    background: #ecfdf5 !important;
 }
 
 .dashboard-title {
     font-family: 'DM Serif Display', serif;
     font-size: 2.4rem;
-    color: #e6edf3;
+    color: #111827 !important;
     line-height: 1.2;
     margin-bottom: 0.3rem;
 }
 
 .dashboard-subtitle {
     font-size: 0.9rem;
-    color: #8b949e;
+    color: #6b7280 !important;
     font-weight: 400;
     line-height: 1.5;
 }
@@ -417,57 +409,44 @@ html, body, [class*="css"] {
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #6b7280 !important;
     padding: 0.5rem 0 0.25rem;
 }
 
 [data-testid="stDataFrame"] {
-    border: 1px solid #30363d !important;
+    border: 1px solid #e5e7eb !important;
     border-radius: 8px !important;
 }
 
-[data-testid="metric-container"] {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 1rem;
-}
-
-details {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-}
-
 hr {
-    border-color: #30363d !important;
+    border-color: #e5e7eb !important;
     margin: 1.5rem 0;
 }
 
 h1, h2, h3, h4, h5, h6,
 .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
 .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-    color: #e6edf3 !important;
+    color: #111827 !important;
     opacity: 1 !important;
 }
 
 .stMarkdown p, .stMarkdown li,
 [data-testid="stMarkdownContainer"] {
-    color: #c9d1d9 !important;
+    color: #374151 !important;
 }
 
 button[data-baseweb="tab"] p {
-    color: #8b949e !important;
+    color: #6b7280 !important;
     font-weight: 700 !important;
 }
 
 button[data-baseweb="tab"][aria-selected="true"] p {
-    color: #ff4b4b !important;
+    color: #E15759 !important;
 }
 
 [data-testid="stRadio"] label,
 [data-testid="stRadio"] label p {
-    color: #c9d1d9 !important;
+    color: #374151 !important;
     font-size: 0.9rem !important;
 }
 
@@ -477,6 +456,13 @@ button[data-baseweb="tab"][aria-selected="true"] p {
 
 .stAlert {
     border-radius: 8px !important;
+}
+
+.info-card *,
+.best-model-card *,
+.insight-box *,
+.kpi-card * {
+    color: inherit;
 }
 </style>
 """,
@@ -520,21 +506,25 @@ def kpi_card(label: str, value: str, sub: str, color: str) -> None:
 
 
 def plotly_dark_layout(fig: go.Figure, height: int = 320) -> go.Figure:
+    """Apply a clean light dashboard layout to Plotly figures.
+
+    Function name is kept so the rest of the app does not need to change.
+    """
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#8b949e", size=11),
+        paper_bgcolor="rgba(255,255,255,0)",
+        plot_bgcolor="rgba(255,255,255,0)",
+        font=dict(color="#374151", size=11),
         legend=dict(
-            bgcolor="rgba(22,27,34,0.9)",
-            bordercolor="#30363d",
+            bgcolor="rgba(255,255,255,0.96)",
+            bordercolor="#e5e7eb",
             borderwidth=1,
-            font=dict(color="#e6edf3"),
+            font=dict(color="#111827"),
         ),
         margin=dict(l=10, r=10, t=35, b=10),
         height=height,
     )
-    fig.update_xaxes(gridcolor="#21262d", linecolor="#30363d")
-    fig.update_yaxes(gridcolor="#21262d", linecolor="#30363d")
+    fig.update_xaxes(gridcolor="#e5e7eb", linecolor="#d1d5db", zerolinecolor="#e5e7eb")
+    fig.update_yaxes(gridcolor="#f3f4f6", linecolor="#d1d5db", zerolinecolor="#e5e7eb")
     return fig
 
 
@@ -918,15 +908,15 @@ def label_distribution_chart(label_counts: pd.Series) -> go.Figure:
             labels=labels,
             values=values,
             hole=0.55,
-            marker=dict(colors=[LABEL_COLORS.get(str(lbl).lower(), "#8b949e") for lbl in labels]),
-            textfont=dict(color="#e6edf3", size=12),
+            marker=dict(colors=[LABEL_COLORS.get(str(lbl).lower(), "#6b7280") for lbl in labels]),
+            textfont=dict(color="#111827", size=12),
             textinfo="label+percent",
         )
     )
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#8b949e", size=11),
+        font=dict(color="#6b7280", size=11),
         showlegend=False,
         margin=dict(l=10, r=10, t=10, b=10),
         height=300,
@@ -936,7 +926,7 @@ def label_distribution_chart(label_counts: pd.Series) -> go.Figure:
                 x=0.5,
                 y=0.5,
                 font_size=15,
-                font_color="#e6edf3",
+                font_color="#111827",
                 showarrow=False,
             )
         ],
@@ -956,91 +946,30 @@ def horizontal_bar(df_words: pd.DataFrame, title: str, color: str) -> go.Figure:
             textposition="outside",
         )
     )
-    fig.update_layout(title=dict(text=title, font=dict(color="#e6edf3", size=14)))
+    fig.update_layout(title=dict(text=title, font=dict(color="#111827", size=14)))
     return plotly_dark_layout(fig, height=430)
 
 
-def split_distribution_chart(split_df: pd.DataFrame) -> go.Figure:
-    plot_df = split_df.drop(index="Total", errors="ignore").reset_index().rename(columns={"index": "label"})
-    fig = go.Figure()
-    fig.add_trace(go.Bar(name="Train", x=plot_df["label"], y=plot_df["Train"], marker_color="#59A14F"))
-    fig.add_trace(go.Bar(name="Validation", x=plot_df["label"], y=plot_df["Validation"], marker_color="#F28E2B"))
-    fig.add_trace(go.Bar(name="Test", x=plot_df["label"], y=plot_df["Test"], marker_color="#E15759"))
-    fig.update_layout(barmode="group")
-    return plotly_dark_layout(fig, height=340)
-
-
-def accuracy_chart(results: Dict[str, Any]) -> go.Figure:
-    rows = [
-        {"Model": name, "Accuracy": item["accuracy"]}
-        for name, item in results.items()
-    ]
-    df_plot = pd.DataFrame(rows).sort_values("Accuracy", ascending=True)
-    fig = go.Figure(
-        go.Bar(
-            x=df_plot["Accuracy"],
-            y=df_plot["Model"],
-            orientation="h",
-            marker_color=[MODEL_COLORS.get(x, "#4E79A7") for x in df_plot["Model"]],
-            text=[f"{v:.4f} ({v*100:.2f}%)" for v in df_plot["Accuracy"]],
-            textposition="outside",
-            textfont=dict(color="#e6edf3", size=11),
-        )
-    )
-    fig.update_xaxes(range=[max(0, df_plot["Accuracy"].min() - 0.05), min(1, df_plot["Accuracy"].max() + 0.05)])
-    return plotly_dark_layout(fig, height=280)
-
-
-def confusion_matrix_figure(cm: np.ndarray, title: str) -> go.Figure:
-    fig = px.imshow(
-        cm,
-        x=LABEL_ORDER,
-        y=LABEL_ORDER,
-        text_auto=True,
-        color_continuous_scale="Blues",
-        aspect="auto",
-        labels=dict(x="Prediksi", y="Label Aktual", color="Jumlah"),
-    )
-    fig.update_layout(title=dict(text=title, font=dict(color="#e6edf3", size=14)))
-    return plotly_dark_layout(fig, height=380)
-
-
-def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
-    class_rows = report_df[report_df["Kelas"].str.lower().isin(LABEL_ORDER)].copy()
-    fig = go.Figure()
-    fig.add_trace(go.Bar(name="Precision", x=class_rows["Kelas"], y=class_rows["Precision"], marker_color="#4E79A7"))
-    fig.add_trace(go.Bar(name="Recall", x=class_rows["Kelas"], y=class_rows["Recall"], marker_color="#F28E2B"))
-    fig.add_trace(go.Bar(name="F1-score", x=class_rows["Kelas"], y=class_rows["F1-score"], marker_color="#59A14F"))
-    fig.update_layout(barmode="group")
-    fig.update_yaxes(range=[0, 1], tickformat=".0%")
-    return plotly_dark_layout(fig, height=310)
-
-
-
-
-def final_model_comparison_dataframe() -> pd.DataFrame:
+def research_model_comparison_dataframe() -> pd.DataFrame:
     rows = []
-    for model, result in FINAL_MODEL_RESULTS.items():
+    for model_name, metrics in RESEARCH_MODEL_RESULTS.items():
         rows.append(
             {
-                "Model": model,
-                "Accuracy": result["accuracy"],
-                "Macro Precision": result["macro_precision"],
-                "Macro Recall": result["macro_recall"],
-                "Macro F1": result["macro_f1"],
-                "Weighted Precision": result["weighted_precision"],
-                "Weighted Recall": result["weighted_recall"],
-                "Weighted F1": result["weighted_f1"],
-                "Catatan": result["catatan"],
+                "Model": model_name,
+                "Accuracy": metrics["accuracy"],
+                "Macro Precision": metrics["macro_precision"],
+                "Macro Recall": metrics["macro_recall"],
+                "Macro F1": metrics["macro_f1"],
+                "Weighted Precision": metrics["weighted_precision"],
+                "Weighted Recall": metrics["weighted_recall"],
+                "Weighted F1": metrics["weighted_f1"],
             }
         )
-    df = pd.DataFrame(rows).sort_values("Accuracy", ascending=False).reset_index(drop=True)
-    df.insert(0, "Rank", df.index + 1)
-    return df
+    return pd.DataFrame(rows).sort_values("Accuracy", ascending=False).reset_index(drop=True)
 
 
-def final_accuracy_chart() -> go.Figure:
-    comparison_df = final_model_comparison_dataframe().sort_values("Accuracy", ascending=True)
+def research_accuracy_chart(height: int = 360) -> go.Figure:
+    comparison_df = research_model_comparison_dataframe().sort_values("Accuracy", ascending=True)
     fig = go.Figure(
         go.Bar(
             x=comparison_df["Accuracy"],
@@ -1049,11 +978,12 @@ def final_accuracy_chart() -> go.Figure:
             marker_color=[MODEL_COLORS.get(x, "#4E79A7") for x in comparison_df["Model"]],
             text=[f"{x:.4f} ({x*100:.2f}%)" for x in comparison_df["Accuracy"]],
             textposition="outside",
-            textfont=dict(color="#e6edf3", size=11),
+            textfont=dict(color="#111827", size=11),
         )
     )
-    fig.update_xaxes(range=[0.80, 0.90], tickformat=".0%")
-    return plotly_dark_layout(fig, height=330)
+    fig.update_layout(title=dict(text="Accuracy Masing-Masing Model", font=dict(color="#111827", size=14)))
+    fig.update_xaxes(range=[0.80, 0.89], tickformat=".0%")
+    return plotly_dark_layout(fig, height=height)
 
 
 def transformer_training_chart(training_rows: List[Dict[str, float]], title: str) -> go.Figure:
@@ -1091,7 +1021,7 @@ def transformer_training_chart(training_rows: List[Dict[str, float]], title: str
         )
     )
     fig.update_layout(
-        title=dict(text=title, font=dict(size=14, color="#e6edf3")),
+        title=dict(text=title, font=dict(size=14, color="#111827")),
         yaxis2=dict(
             overlaying="y",
             side="right",
@@ -1101,12 +1031,90 @@ def transformer_training_chart(training_rows: List[Dict[str, float]], title: str
         ),
     )
     fig.update_xaxes(tickmode="array", tickvals=[1, 2, 3])
+    return plotly_dark_layout(fig, height=330)
+
+
+def class_metrics_bar(rows: List[Dict[str, Any]], title: str) -> go.Figure:
+    df = pd.DataFrame(rows)
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name="Precision", x=df["Kelas"], y=df["Precision"], marker_color="#4E79A7"))
+    fig.add_trace(go.Bar(name="Recall", x=df["Kelas"], y=df["Recall"], marker_color="#F28E2B"))
+    fig.add_trace(go.Bar(name="F1-score", x=df["Kelas"], y=df["F1-score"], marker_color="#59A14F"))
+    fig.update_layout(barmode="group", title=dict(text=title, font=dict(color="#111827", size=14)))
+    fig.update_yaxes(range=[0, 1], tickformat=".0%")
+    return plotly_dark_layout(fig, height=300)
+
+
+def split_distribution_chart(split_df: pd.DataFrame) -> go.Figure:
+    """Create split chart safely even if the label column name changes after reset_index."""
+    plot_df = split_df.copy()
+    if "Total" in plot_df.index:
+        plot_df = plot_df.drop(index="Total", errors="ignore")
+
+    plot_df = plot_df.reset_index()
+    first_col = plot_df.columns[0]
+    if "label" not in plot_df.columns:
+        plot_df = plot_df.rename(columns={first_col: "label"})
+    else:
+        plot_df["label"] = plot_df["label"].astype(str)
+
+    for col_name in ["Train", "Validation", "Test"]:
+        if col_name not in plot_df.columns:
+            plot_df[col_name] = 0
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name="Train", x=plot_df["label"], y=plot_df["Train"], marker_color="#59A14F"))
+    fig.add_trace(go.Bar(name="Validation", x=plot_df["label"], y=plot_df["Validation"], marker_color="#F28E2B"))
+    fig.add_trace(go.Bar(name="Test", x=plot_df["label"], y=plot_df["Test"], marker_color="#E15759"))
+    fig.update_layout(barmode="group")
     return plotly_dark_layout(fig, height=340)
 
 
-def transformer_metric_bar(rows: List[Dict[str, Any]]) -> go.Figure:
-    df = pd.DataFrame(rows)
-    return metrics_bar(df)
+def accuracy_chart(results: Dict[str, Any]) -> go.Figure:
+    rows = [
+        {"Model": name, "Accuracy": item["accuracy"]}
+        for name, item in results.items()
+    ]
+    df_plot = pd.DataFrame(rows).sort_values("Accuracy", ascending=True)
+    fig = go.Figure(
+        go.Bar(
+            x=df_plot["Accuracy"],
+            y=df_plot["Model"],
+            orientation="h",
+            marker_color=[MODEL_COLORS.get(x, "#4E79A7") for x in df_plot["Model"]],
+            text=[f"{v:.4f} ({v*100:.2f}%)" for v in df_plot["Accuracy"]],
+            textposition="outside",
+            textfont=dict(color="#111827", size=11),
+        )
+    )
+    fig.update_xaxes(range=[max(0, df_plot["Accuracy"].min() - 0.05), min(1, df_plot["Accuracy"].max() + 0.05)])
+    return plotly_dark_layout(fig, height=280)
+
+
+def confusion_matrix_figure(cm: np.ndarray, title: str) -> go.Figure:
+    fig = px.imshow(
+        cm,
+        x=LABEL_ORDER,
+        y=LABEL_ORDER,
+        text_auto=True,
+        color_continuous_scale="Blues",
+        aspect="auto",
+        labels=dict(x="Prediksi", y="Label Aktual", color="Jumlah"),
+    )
+    fig.update_layout(title=dict(text=title, font=dict(color="#111827", size=14)))
+    return plotly_dark_layout(fig, height=380)
+
+
+def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
+    class_rows = report_df[report_df["Kelas"].str.lower().isin(LABEL_ORDER)].copy()
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name="Precision", x=class_rows["Kelas"], y=class_rows["Precision"], marker_color="#4E79A7"))
+    fig.add_trace(go.Bar(name="Recall", x=class_rows["Kelas"], y=class_rows["Recall"], marker_color="#F28E2B"))
+    fig.add_trace(go.Bar(name="F1-score", x=class_rows["Kelas"], y=class_rows["F1-score"], marker_color="#59A14F"))
+    fig.update_layout(barmode="group")
+    fig.update_yaxes(range=[0, 1], tickformat=".0%")
+    return plotly_dark_layout(fig, height=310)
+
 
 def issue_chart(top_issues: pd.DataFrame, label: str) -> go.Figure:
     plot_data = (
@@ -1122,10 +1130,10 @@ def issue_chart(top_issues: pd.DataFrame, label: str) -> go.Figure:
             marker_color=LABEL_COLORS.get(label, "#4E79A7"),
             text=[f"{x:.4f} | {c} tweet" for x, c in zip(plot_data["skor_tfidf_rata_rata"], plot_data["jumlah_tweet"])],
             textposition="outside",
-            textfont=dict(color="#e6edf3", size=10),
+            textfont=dict(color="#111827", size=10),
         )
     )
-    fig.update_layout(title=dict(text=f"Isu Dominan: {label.capitalize()}", font=dict(color="#e6edf3", size=14)))
+    fig.update_layout(title=dict(text=f"Isu Dominan: {label.capitalize()}", font=dict(color="#111827", size=14)))
     return plotly_dark_layout(fig, height=390)
 
 
@@ -1227,8 +1235,8 @@ with st.sidebar:
         """
         <div style="text-align:center;margin-bottom:1.5rem;">
             <div style="font-size:2rem;">🤖</div>
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:#e6edf3;">AI Work Sentiment</div>
-            <div style="font-size:0.7rem;color:#8b949e;">Dashboard Skripsi · Deployable</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:#111827;">AI Work Sentiment</div>
+            <div style="font-size:0.7rem;color:#6b7280;">Dashboard Skripsi · Deployable</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1268,7 +1276,7 @@ with st.sidebar:
 
     st.markdown(
         """
-        <div style="font-size:0.68rem;color:#484f58;text-align:center;line-height:1.6;margin-top:1rem;">
+        <div style="font-size:0.68rem;color:#d1d5db;text-align:center;line-height:1.6;margin-top:1rem;">
             Streamlit App · Dataset-driven<br/>
             Tanpa HTML export notebook
         </div>
@@ -1298,10 +1306,10 @@ except Exception as exc:
 
 label_counts = processed_df["label_final"].value_counts().reindex(LABEL_ORDER).dropna()
 model_results = artifacts["results"]
-best_baseline_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
-best_baseline_accuracy = model_results[best_baseline_model]["accuracy"]
-best_final_model = max(FINAL_MODEL_RESULTS.items(), key=lambda item: item[1]["accuracy"])[0]
-best_final_accuracy = FINAL_MODEL_RESULTS[best_final_model]["accuracy"]
+best_svm_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
+research_comparison_df = research_model_comparison_dataframe()
+best_research_model = research_comparison_df.loc[0, "Model"]
+best_research_accuracy = research_comparison_df.loc[0, "Accuracy"]
 
 
 # -----------------------------------------------------------------------------
@@ -1313,7 +1321,7 @@ if selected_name == "Overview":
         <div style="margin-bottom:2rem;">
             <div class="dashboard-title">AI Work Sentiment Dashboard</div>
             <div class="dashboard-subtitle">
-                Visualisasi dan deployment modeling analisis sentimen publik terhadap Artificial Intelligence<br/>
+                Visualisasi hasil modeling analisis sentimen publik terhadap Artificial Intelligence<br/>
                 dalam dunia kerja berbasis pengetahuan di Indonesia.
             </div>
         </div>
@@ -1326,11 +1334,12 @@ if selected_name == "Overview":
     st.markdown(
         """
         <div class="info-card">
-            <div class="info-card-title">Tentang Dashboard Baru</div>
-            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
-                Dashboard ini membaca <code>Dataset Final.csv</code> secara langsung, menjalankan preprocessing,
-                data splitting, TF-IDF feature extraction, training SVM, evaluasi, dan prediksi saat aplikasi berjalan.
-                Dengan begitu, dashboard tidak lagi bergantung pada file HTML export notebook.
+            <div class="info-card-title">Tentang Dashboard</div>
+            <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
+                Dashboard ini menampilkan hasil modeling dari skenario TF-IDF + SVM, IndoBERT,
+                IndoBERTweet, dan IndoBERTweet tanpa normalisasi. Aplikasi tetap membaca
+                <code>Dataset Final.csv</code> untuk visualisasi data, preprocessing, data split,
+                dan prediksi interaktif.
             </p>
         </div>
         """,
@@ -1342,8 +1351,8 @@ if selected_name == "Overview":
         ("Total Data", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#4E79A7"),
         ("Data Berlabel", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap dianalisis", "#59A14F"),
         ("Kategori Label", f"{processed_df['label_final'].nunique()}", "Ancaman · Peluang · Netral", "#F28E2B"),
-        ("Model Terbaik", best_final_model, "Hasil modeling Bab IV", "#E15759"),
-        ("Accuracy Terbaik", f"{best_final_accuracy*100:.2f}%", "Test set", "#B07AA1"),
+        ("Model Terbaik", best_research_model, "Hasil modeling Bab IV", "#E15759"),
+        ("Accuracy Terbaik", f"{best_research_accuracy*100:.2f}%", "Test set", "#B07AA1"),
     ]
     for col, (label, value, sub, color) in zip(cols, kpis):
         with col:
@@ -1351,33 +1360,19 @@ if selected_name == "Overview":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1.15, 1])
+    col_left, col_right = st.columns([1.25, 1])
     with col_left:
         section_header("02", "Visualisasi Accuracy Model")
-        st.plotly_chart(final_accuracy_chart(), use_container_width=True)
+        st.plotly_chart(research_accuracy_chart(height=390), use_container_width=True)
         insight(
-            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_final_model}</strong> "
-            f"dengan accuracy <strong>{best_final_accuracy*100:.2f}%</strong> pada test set.",
+            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_research_model}</strong> "
+            f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong> pada test set.",
             "success",
         )
 
     with col_right:
         section_header("03", "Distribusi Label")
         st.plotly_chart(label_distribution_chart(label_counts), use_container_width=True)
-
-    st.markdown(
-        f"""
-        <div class="info-card" style="margin-top:0.75rem;">
-            <div class="info-card-title">Catatan Overview</div>
-            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
-                Halaman overview difokuskan untuk menampilkan ringkasan hasil modeling dan distribusi label.
-                Seluruh visualisasi model Transformer tetap tersedia pada halaman detail masing-masing model
-                dan pada halaman <strong>Model Comparison</strong>.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 elif selected_name == "EDA":
@@ -1441,7 +1436,7 @@ elif selected_name == "Preprocessing":
             """
             <div class="info-card" style="border-left:3px solid #4E79A7;">
                 <div class="info-card-title" style="color:#4E79A7;">Jalur TF-IDF + SVM</div>
-                <ul style="color:#c9d1d9;font-size:0.88rem;line-height:1.9;padding-left:1.2rem;margin:0;">
+                <ul style="color:#374151;font-size:0.88rem;line-height:1.9;padding-left:1.2rem;margin:0;">
                     <li>Case folding</li>
                     <li>Normalisasi teks</li>
                     <li>Stopword removal</li>
@@ -1458,7 +1453,7 @@ elif selected_name == "Preprocessing":
             """
             <div class="info-card" style="border-left:3px solid #E15759;">
                 <div class="info-card-title" style="color:#E15759;">Jalur Transformer</div>
-                <ul style="color:#c9d1d9;font-size:0.88rem;line-height:1.9;padding-left:1.2rem;margin:0;">
+                <ul style="color:#374151;font-size:0.88rem;line-height:1.9;padding-left:1.2rem;margin:0;">
                     <li>Light preprocessing</li>
                     <li>Tanpa stopword removal</li>
                     <li>Tanpa stemming</li>
@@ -1513,8 +1508,8 @@ elif selected_name == "Data Split":
                 f"""
                 <div style="display:flex;justify-content:space-between;align-items:center;
                             padding:0.5rem 0.8rem;margin-bottom:0.4rem;
-                            background:#161b22;border-radius:8px;border-left:3px solid {color};">
-                    <span style="font-weight:600;color:#e6edf3;">{split_name}</span>
+                            background:#ffffff;border-radius:8px;border-left:3px solid {color};">
+                    <span style="font-weight:600;color:#111827;">{split_name}</span>
                     <span style="color:{color};font-weight:700;">{total:,} tweet ({pct:.1f}%)</span>
                 </div>
                 """.replace(",", "."),
@@ -1549,7 +1544,7 @@ elif selected_name == "Baseline TF-IDF + SVM":
     selected_model_eval = st.selectbox(
         "Pilih skenario evaluasi",
         list(model_results.keys()),
-        index=0 if best_baseline_model == "TF-IDF + SVM tanpa stemming" else 1,
+        index=0 if best_svm_model == "TF-IDF + SVM tanpa stemming" else 1,
     )
     selected_result = model_results[selected_model_eval]
     report_df = report_to_dataframe(selected_result["report_dict"])
@@ -1585,10 +1580,10 @@ elif selected_name == "Prediksi":
     st.markdown(
         """
         <div class="info-card">
-            <div class="info-card-title">Model Prediksi Interaktif</div>
-            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
-                Halaman ini memakai model TF-IDF + SVM untuk memprediksi sentimen dari teks tweet baru.
-                Hasil prediksi ditampilkan sebagai fitur tambahan dashboard agar modeling dapat dicoba secara interaktif.
+            <div class="info-card-title">Model Deployment Aktif</div>
+            <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
+                Halaman ini memakai model TF-IDF + SVM yang dilatih langsung dari dataset saat app berjalan.
+                Ini adalah versi deployable yang ringan untuk GitHub + Streamlit Cloud.
             </p>
         </div>
         """,
@@ -1615,7 +1610,7 @@ elif selected_name == "Prediksi":
                     <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:{color};text-transform:capitalize;">
                         {pred["label"]}
                     </div>
-                    <div style="color:#8b949e;font-size:0.85rem;margin-top:0.3rem;">
+                    <div style="color:#6b7280;font-size:0.85rem;margin-top:0.3rem;">
                         Pseudo-confidence berbasis margin SVM: {pred["confidence"]*100:.2f}%
                     </div>
                 </div>
@@ -1636,81 +1631,95 @@ elif selected_name == "Hasil Transformer":
     st.markdown(
         """
         <div class="info-card">
-            <div class="info-card-title">Fokus Halaman</div>
-            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
-                Halaman ini menampilkan hasil modeling Transformer dari notebook Bab IV dalam bentuk dashboard:
-                kurva training, accuracy, classification report, dan metrik per kelas untuk IndoBERT,
-                IndoBERTweet, serta IndoBERTweet tanpa normalisasi.
+            <div class="info-card-title">Ringkasan</div>
+            <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
+                Halaman ini memvisualisasikan hasil eksperimen Transformer dari notebook skripsi.
+                Fine-tuning tidak dijalankan ulang di Streamlit agar dashboard tetap stabil saat deploy.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    transformer_choice = st.selectbox(
-        "Pilih skenario Transformer",
-        list(TRANSFORMER_RESULTS.keys()),
+    transformer_models = ["IndoBERT", "IndoBERTweet", "IndoBERTweet tanpa normalisasi"]
+    selected_transformer = st.selectbox(
+        "Pilih model Transformer",
+        transformer_models,
         index=0,
     )
-    transformer_detail = TRANSFORMER_RESULTS[transformer_choice]
+
+    metrics = RESEARCH_MODEL_RESULTS[selected_transformer]
+    rows = TRANSFORMER_CLASS_REPORTS[selected_transformer]
 
     cols = st.columns(4)
     with cols[0]:
-        kpi_card("Model", transformer_choice, transformer_detail["model_hf"], MODEL_COLORS.get(transformer_choice, "#E15759"))
+        kpi_card("Model", selected_transformer, "Transformer", MODEL_COLORS.get(selected_transformer, "#E15759"))
     with cols[1]:
-        kpi_card("Accuracy", f"{transformer_detail['accuracy']*100:.2f}%", "Test set", "#59A14F")
+        kpi_card("Accuracy", f"{metrics['accuracy']*100:.2f}%", "Test set", "#59A14F")
     with cols[2]:
-        kpi_card("Epoch", "3", "Training notebook", "#F28E2B")
+        kpi_card("Macro F1", f"{metrics['macro_f1']:.2f}", "Rata-rata kelas", "#F28E2B")
     with cols[3]:
-        kpi_card("Input Teks", transformer_detail["input_col"], "Kolom model", "#B07AA1")
+        kpi_card("Weighted F1", f"{metrics['weighted_f1']:.2f}", "Support-weighted", "#B07AA1")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    tab_curve, tab_report, tab_metric = st.tabs(["📈 Kurva Training", "📋 Classification Report", "📊 Metrik per Kelas"])
-
-    with tab_curve:
+    col_left, col_right = st.columns([1.05, 1])
+    with col_left:
+        st.markdown("#### Kurva Training")
         st.plotly_chart(
-            transformer_training_chart(transformer_detail["training"], f"{transformer_choice} - Loss dan Validation Accuracy"),
+            transformer_training_chart(
+                TRANSFORMER_TRAINING[selected_transformer],
+                f"{selected_transformer} — Loss dan Validation Accuracy per Epoch",
+            ),
             use_container_width=True,
         )
-        st.dataframe(
-            pd.DataFrame(transformer_detail["training"]).style.format({
-                "Training Loss": "{:.6f}",
-                "Validation Loss": "{:.6f}",
-                "Validation Accuracy": "{:.6f}",
-            }),
+
+    with col_right:
+        st.markdown("#### Metrik per Kelas")
+        st.plotly_chart(
+            class_metrics_bar(rows, f"{selected_transformer} — Precision, Recall, F1-score"),
             use_container_width=True,
-            hide_index=True,
         )
 
-    with tab_report:
-        st.markdown(f'<div class="code-output">{transformer_detail["report_text"]}</div>', unsafe_allow_html=True)
-
-    with tab_metric:
-        report_df = pd.DataFrame(transformer_detail["class_rows"])
-        st.plotly_chart(transformer_metric_bar(transformer_detail["class_rows"]), use_container_width=True)
-        st.dataframe(
-            report_df.style.format({
-                "Precision": "{:.2f}",
-                "Recall": "{:.2f}",
-                "F1-score": "{:.2f}",
-                "Support": "{:,.0f}",
-            }),
-            use_container_width=True,
-            hide_index=True,
-        )
-
-    insight(
-        "IndoBERT memperoleh performa tertinggi pada hasil modeling, sedangkan IndoBERTweet dan "
-        "IndoBERTweet tanpa normalisasi tetap kompetitif pada data tweet berbahasa Indonesia.",
-        "success" if transformer_choice == "IndoBERT" else "",
+    st.markdown("#### Classification Report")
+    report_df = pd.DataFrame(rows)
+    st.dataframe(
+        report_df.style.format({
+            "Precision": "{:.2f}",
+            "Recall": "{:.2f}",
+            "F1-score": "{:.2f}",
+            "Support": "{:,.0f}",
+        }),
+        use_container_width=True,
+        hide_index=True,
     )
+
+    st.markdown("#### Perbandingan Transformer")
+    transformer_compare = research_model_comparison_dataframe()
+    transformer_compare = transformer_compare[
+        transformer_compare["Model"].isin(transformer_models)
+    ].copy()
+    st.dataframe(
+        transformer_compare.style.format({
+            "Accuracy": "{:.4f}",
+            "Macro Precision": "{:.2f}",
+            "Macro Recall": "{:.2f}",
+            "Macro F1": "{:.2f}",
+            "Weighted Precision": "{:.2f}",
+            "Weighted Recall": "{:.2f}",
+            "Weighted F1": "{:.2f}",
+        }),
+        use_container_width=True,
+        hide_index=True,
+    )
+
 
 
 elif selected_name == "Model Comparison":
     section_header("10", "Perbandingan Semua Model")
 
-    comparison_df = final_model_comparison_dataframe()
+    comparison_df = research_model_comparison_dataframe()
+    comparison_df.insert(0, "Rank", comparison_df.index + 1)
 
     cols = st.columns(4)
     with cols[0]:
@@ -1718,57 +1727,33 @@ elif selected_name == "Model Comparison":
     with cols[1]:
         kpi_card("Best Accuracy", f"{comparison_df.loc[0, 'Accuracy']*100:.2f}%", "Test set", "#59A14F")
     with cols[2]:
-        kpi_card("Skenario Model", str(len(comparison_df)), "Baseline + Transformer", "#4E79A7")
+        kpi_card("Jumlah Model", str(len(comparison_df)), "Skenario modeling", "#4E79A7")
     with cols[3]:
         kpi_card("Dataset", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#F28E2B")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.plotly_chart(final_accuracy_chart(), use_container_width=True)
+
+    st.markdown("#### Ranking Accuracy")
+    st.plotly_chart(research_accuracy_chart(height=360), use_container_width=True)
 
     st.markdown("#### Tabel Evaluasi Utama")
-    metric_cols = [
-        "Accuracy",
-        "Macro Precision",
-        "Macro Recall",
-        "Macro F1",
-        "Weighted Precision",
-        "Weighted Recall",
-        "Weighted F1",
-    ]
     st.dataframe(
-        comparison_df.style.format({col: "{:.4f}" if col == "Accuracy" else "{:.2f}" for col in metric_cols}),
+        comparison_df.style.format({
+            "Accuracy": "{:.4f}",
+            "Macro Precision": "{:.2f}",
+            "Macro Recall": "{:.2f}",
+            "Macro F1": "{:.2f}",
+            "Weighted Precision": "{:.2f}",
+            "Weighted Recall": "{:.2f}",
+            "Weighted F1": "{:.2f}",
+        }),
         use_container_width=True,
         hide_index=True,
     )
 
-    st.markdown("#### Detail Model")
-    selected_model = st.selectbox("Pilih model", comparison_df["Model"].tolist(), index=0)
-
-    if selected_model in TRANSFORMER_RESULTS:
-        detail = TRANSFORMER_RESULTS[selected_model]
-        detail_rows = pd.DataFrame(detail["class_rows"])
-        col_l, col_r = st.columns([1, 1.25])
-        with col_l:
-            st.markdown(f'<div class="code-output">{detail["report_text"]}</div>', unsafe_allow_html=True)
-        with col_r:
-            st.plotly_chart(transformer_metric_bar(detail["class_rows"]), use_container_width=True)
-            st.dataframe(detail_rows, use_container_width=True, hide_index=True)
-    else:
-        if selected_model in model_results:
-            selected_result = model_results[selected_model]
-            report_df = report_to_dataframe(selected_result["report_dict"])
-            col_l, col_r = st.columns([1, 1.25])
-            with col_l:
-                st.markdown(f'<div class="code-output">{selected_result["report_text"]}</div>', unsafe_allow_html=True)
-            with col_r:
-                st.plotly_chart(metrics_bar(report_df), use_container_width=True)
-                st.dataframe(report_df, use_container_width=True, hide_index=True)
-        else:
-            st.info("Detail baseline mengikuti hasil evaluasi pada halaman Baseline TF-IDF + SVM.")
-
     insight(
-        "Hasil perbandingan menunjukkan IndoBERT sebagai model dengan performa terbaik, "
-        "diikuti IndoBERTweet dan IndoBERTweet tanpa normalisasi.",
+        f"Model terbaik pada hasil modeling skripsi adalah <strong>{comparison_df.loc[0, 'Model']}</strong> "
+        f"dengan accuracy <strong>{comparison_df.loc[0, 'Accuracy']*100:.2f}%</strong>.",
         "success",
     )
 
@@ -1781,7 +1766,7 @@ elif selected_name == "Isu Dominan":
         """
         <div class="info-card">
             <div class="info-card-title">Metode</div>
-            <p style="color:#c9d1d9;font-size:0.9rem;line-height:1.7;margin:0;">
+            <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
                 Analisis ini memakai TF-IDF n-gram 2 sampai 3 kata untuk mencari frasa dominan
                 pada masing-masing label sentimen. Perhitungan dilakukan langsung dari dataset aktif.
             </p>
