@@ -5,7 +5,11 @@ plotly>=5.18
 scikit-learn>=1.3
 Sastrawi>=1.0.1
 wordcloud>=1.9
-
+datasets
+transformers
+torch
+accelerate
+evaluate
 # Opsional untuk halaman Transformer Opsional.
 # Aktifkan hanya jika environment deployment cukup kuat.
 # torch
