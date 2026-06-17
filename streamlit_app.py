@@ -5,10 +5,10 @@ Dashboard skripsi untuk visualisasi dan deployment modeling analisis sentimen
 publik terhadap Artificial Intelligence dalam dunia kerja berbasis pengetahuan
 di Indonesia.
 
-Versi ini tidak lagi membaca file HTML hasil export notebook. App membaca
-Dataset Final.csv, menjalankan preprocessing, split data, feature extraction,
-training baseline TF-IDF + SVM, evaluasi, dan prediksi secara langsung saat
-Streamlit berjalan.
+Versi ini mengikuti notebook revisi setelah sidang. App memprioritaskan
+Dataset Final Semisupervised Binary.csv, menjalankan preprocessing, split data,
+feature extraction, training baseline TF-IDF + SVM, evaluasi, dan prediksi
+secara langsung saat Streamlit berjalan.
 
 Catatan:
 - Dashboard difokuskan untuk visualisasi hasil modeling skripsi.
@@ -47,12 +47,35 @@ st.set_page_config(
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_DATASET = BASE_DIR / "Dataset Final.csv"
+
+# Dataset utama mengikuti notebook revisi setelah sidang.
+# Urutan kandidat dibuat agar deploy tetap aman jika file ditempatkan di root repo
+# atau di folder data/.
+CSV_CANDIDATES = [
+    BASE_DIR / "Dataset Final Semisupervised Binary.csv",
+    BASE_DIR / "data" / "Dataset Final Semisupervised Binary.csv",
+    BASE_DIR / "Dataset Final Semisupervised.csv",
+    BASE_DIR / "data" / "Dataset Final Semisupervised.csv",
+    BASE_DIR / "Dataset Final.csv",
+    BASE_DIR / "data" / "Dataset Final.csv",
+]
+
+
+def get_default_dataset_path() -> Optional[Path]:
+    for candidate in CSV_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+DEFAULT_DATASET = get_default_dataset_path()
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.20
 VALIDATION_SIZE_FROM_REMAINING = 0.125
-LABEL_ORDER = ["ancaman", "peluang", "netral"]
+SEMI_SUPERVISED_LABELS = ["ancaman", "peluang", "netral"]
+MODEL_LABELS = ["ancaman", "peluang"]
+LABEL_ORDER = MODEL_LABELS
 
 MODEL_COLORS = {
     "TF-IDF + SVM tanpa stemming": "#4E79A7",
@@ -68,107 +91,102 @@ LABEL_COLORS = {
     "netral": "#4E79A7",
 }
 
-# Hasil modeling Bab IV dari notebook skripsi.
+# Hasil modeling Bab IV dari notebook revisi setelah sidang.
 # Nilai ini ditampilkan untuk visualisasi dashboard, bukan untuk menjalankan fine-tuning ulang.
 RESEARCH_MODEL_RESULTS = {
     "TF-IDF + SVM tanpa stemming": {
-        "accuracy": 0.8413,
-        "macro_precision": 0.84,
-        "macro_recall": 0.84,
-        "macro_f1": 0.84,
-        "weighted_precision": 0.84,
-        "weighted_recall": 0.84,
-        "weighted_f1": 0.84,
+        "accuracy": 0.986097,
+        "macro_precision": 0.99,
+        "macro_recall": 0.98,
+        "macro_f1": 0.98,
+        "weighted_precision": 0.99,
+        "weighted_recall": 0.99,
+        "weighted_f1": 0.99,
     },
     "TF-IDF + SVM dengan stemming": {
-        "accuracy": 0.8279,
-        "macro_precision": 0.83,
-        "macro_recall": 0.83,
-        "macro_f1": 0.83,
-        "weighted_precision": 0.83,
-        "weighted_recall": 0.83,
-        "weighted_f1": 0.83,
+        "accuracy": 0.986097,
+        "macro_precision": 0.99,
+        "macro_recall": 0.98,
+        "macro_f1": 0.98,
+        "weighted_precision": 0.99,
+        "weighted_recall": 0.99,
+        "weighted_f1": 0.99,
     },
     "IndoBERT": {
-        "accuracy": 0.8767,
-        "macro_precision": 0.88,
-        "macro_recall": 0.88,
-        "macro_f1": 0.88,
-        "weighted_precision": 0.88,
-        "weighted_recall": 0.88,
-        "weighted_f1": 0.88,
+        "accuracy": 0.987090,
+        "macro_precision": 0.99,
+        "macro_recall": 0.98,
+        "macro_f1": 0.98,
+        "weighted_precision": 0.99,
+        "weighted_recall": 0.99,
+        "weighted_f1": 0.99,
     },
     "IndoBERTweet": {
-        "accuracy": 0.8528,
-        "macro_precision": 0.85,
-        "macro_recall": 0.86,
-        "macro_f1": 0.85,
-        "weighted_precision": 0.86,
-        "weighted_recall": 0.85,
-        "weighted_f1": 0.85,
+        "accuracy": 0.987090,
+        "macro_precision": 0.99,
+        "macro_recall": 0.98,
+        "macro_f1": 0.98,
+        "weighted_precision": 0.99,
+        "weighted_recall": 0.99,
+        "weighted_f1": 0.99,
     },
     "IndoBERTweet tanpa normalisasi": {
-        "accuracy": 0.8518,
-        "macro_precision": 0.85,
-        "macro_recall": 0.85,
-        "macro_f1": 0.85,
-        "weighted_precision": 0.85,
-        "weighted_recall": 0.85,
-        "weighted_f1": 0.85,
+        "accuracy": 0.979146,
+        "macro_precision": 0.97,
+        "macro_recall": 0.98,
+        "macro_f1": 0.98,
+        "weighted_precision": 0.98,
+        "weighted_recall": 0.98,
+        "weighted_f1": 0.98,
     },
 }
 
 TRANSFORMER_TRAINING = {
     "IndoBERT": [
-        {"Epoch": 1, "Training Loss": 0.619223, "Validation Loss": 0.445345, "Validation Accuracy": 0.832},
-        {"Epoch": 2, "Training Loss": 0.390263, "Validation Loss": 0.430128, "Validation Accuracy": 0.866},
-        {"Epoch": 3, "Training Loss": 0.267085, "Validation Loss": 0.479817, "Validation Accuracy": 0.858},
+        {"Epoch": 1, "Training Loss": 0.181766, "Validation Loss": 0.059876, "Validation Accuracy": 0.986111},
+        {"Epoch": 2, "Training Loss": 0.068894, "Validation Loss": 0.069323, "Validation Accuracy": 0.992063},
+        {"Epoch": 3, "Training Loss": 0.021799, "Validation Loss": 0.064377, "Validation Accuracy": 0.990079},
     ],
     "IndoBERTweet": [
-        {"Epoch": 1, "Training Loss": 0.698857, "Validation Loss": 0.556220, "Validation Accuracy": 0.780},
-        {"Epoch": 2, "Training Loss": 0.422145, "Validation Loss": 0.472993, "Validation Accuracy": 0.842},
-        {"Epoch": 3, "Training Loss": 0.298713, "Validation Loss": 0.499404, "Validation Accuracy": 0.844},
+        {"Epoch": 1, "Training Loss": 0.153412, "Validation Loss": 0.063271, "Validation Accuracy": 0.988095},
+        {"Epoch": 2, "Training Loss": 0.066158, "Validation Loss": 0.055987, "Validation Accuracy": 0.990079},
+        {"Epoch": 3, "Training Loss": 0.025167, "Validation Loss": 0.069481, "Validation Accuracy": 0.992063},
     ],
     "IndoBERTweet tanpa normalisasi": [
-        {"Epoch": 1, "Training Loss": 0.691702, "Validation Loss": 0.533993, "Validation Accuracy": 0.794},
-        {"Epoch": 2, "Training Loss": 0.405936, "Validation Loss": 0.464697, "Validation Accuracy": 0.852},
-        {"Epoch": 3, "Training Loss": 0.284906, "Validation Loss": 0.491821, "Validation Accuracy": 0.856},
+        {"Epoch": 1, "Training Loss": 0.149644, "Validation Loss": 0.071791, "Validation Accuracy": 0.978175},
+        {"Epoch": 2, "Training Loss": 0.067217, "Validation Loss": 0.054866, "Validation Accuracy": 0.990079},
+        {"Epoch": 3, "Training Loss": 0.017818, "Validation Loss": 0.074167, "Validation Accuracy": 0.990079},
     ],
 }
 
 TRANSFORMER_CLASS_REPORTS = {
     "IndoBERT": [
-        {"Kelas": "Ancaman", "Precision": 0.87, "Recall": 0.91, "F1-score": 0.89, "Support": 357},
-        {"Kelas": "Netral", "Precision": 0.89, "Recall": 0.84, "F1-score": 0.86, "Support": 389},
-        {"Kelas": "Peluang", "Precision": 0.87, "Recall": 0.89, "F1-score": 0.88, "Support": 300},
+        {"Kelas": "Ancaman", "Precision": 0.99, "Recall": 0.99, "F1-score": 0.99, "Support": 707},
+        {"Kelas": "Peluang", "Precision": 0.99, "Recall": 0.97, "F1-score": 0.98, "Support": 300},
     ],
     "IndoBERTweet": [
-        {"Kelas": "Ancaman", "Precision": 0.84, "Recall": 0.92, "F1-score": 0.88, "Support": 357},
-        {"Kelas": "Netral", "Precision": 0.89, "Recall": 0.78, "F1-score": 0.83, "Support": 389},
-        {"Kelas": "Peluang", "Precision": 0.83, "Recall": 0.86, "F1-score": 0.84, "Support": 300},
+        {"Kelas": "Ancaman", "Precision": 0.99, "Recall": 0.99, "F1-score": 0.99, "Support": 707},
+        {"Kelas": "Peluang", "Precision": 0.98, "Recall": 0.97, "F1-score": 0.98, "Support": 300},
     ],
     "IndoBERTweet tanpa normalisasi": [
-        {"Kelas": "Ancaman", "Precision": 0.86, "Recall": 0.89, "F1-score": 0.88, "Support": 357},
-        {"Kelas": "Netral", "Precision": 0.87, "Recall": 0.80, "F1-score": 0.83, "Support": 389},
-        {"Kelas": "Peluang", "Precision": 0.83, "Recall": 0.87, "F1-score": 0.85, "Support": 300},
+        {"Kelas": "Ancaman", "Precision": 0.99, "Recall": 0.98, "F1-score": 0.99, "Support": 707},
+        {"Kelas": "Peluang", "Precision": 0.96, "Recall": 0.97, "F1-score": 0.97, "Support": 300},
     ],
 }
 
+# Matriks menggunakan urutan label: [ancaman, peluang].
 TRANSFORMER_CONFUSION_MATRICES = {
     "IndoBERT": np.array([
-        [325, 12, 20],
-        [14, 266, 20],
-        [34, 29, 326],
+        [703, 4],
+        [9, 291],
     ]),
     "IndoBERTweet": np.array([
-        [329, 12, 16],
-        [20, 258, 22],
-        [43, 41, 305],
+        [702, 5],
+        [8, 292],
     ]),
     "IndoBERTweet tanpa normalisasi": np.array([
-        [319, 11, 27],
-        [18, 261, 21],
-        [35, 43, 311],
+        [695, 12],
+        [9, 291],
     ]),
 }
 
@@ -511,11 +529,13 @@ def insight(text: str, style: str = "") -> None:
 
 
 def kpi_card(label: str, value: str, sub: str, color: str) -> None:
+    value_text = str(value)
+    value_font_size = "1.35rem" if len(value_text) > 18 else "2rem"
     st.markdown(
         f"""
         <div class="kpi-card" style="--accent-color:{color};">
             <div class="kpi-label">{label}</div>
-            <div class="kpi-value" style="color:{color};">{value}</div>
+            <div class="kpi-value" style="color:{color};font-size:{value_font_size};word-break:normal;overflow-wrap:break-word;">{value_text}</div>
             <div class="kpi-sub">{sub}</div>
         </div>
         """,
@@ -550,13 +570,25 @@ def plotly_dark_layout(fig: go.Figure, height: int = 320) -> go.Figure:
 # DATA LOADING AND PREPROCESSING
 # -----------------------------------------------------------------------------
 def read_csv_safely(source: Any) -> pd.DataFrame:
-    """Read CSV with semicolon first because notebook uses sep=';'."""
-    try:
-        return pd.read_csv(source, sep=";", encoding="utf-8-sig")
-    except Exception:
-        if hasattr(source, "seek"):
-            source.seek(0)
-        return pd.read_csv(source, encoding="utf-8-sig")
+    """Read CSV robustly; notebook files mainly use semicolon separators."""
+    attempts = [
+        {"sep": ";", "encoding": "utf-8-sig"},
+        {"sep": ",", "encoding": "utf-8-sig"},
+        {"sep": None, "encoding": "utf-8-sig", "engine": "python"},
+    ]
+    last_error: Optional[Exception] = None
+    for kwargs in attempts:
+        try:
+            if hasattr(source, "seek"):
+                source.seek(0)
+            df_read = pd.read_csv(source, **kwargs)
+            if len(df_read.columns) > 1:
+                return df_read
+        except Exception as exc:
+            last_error = exc
+    if last_error is not None:
+        raise last_error
+    raise ValueError("Dataset tidak dapat dibaca sebagai CSV.")
 
 
 @st.cache_data(show_spinner=False)
@@ -566,29 +598,44 @@ def load_dataset_from_path(path: str) -> pd.DataFrame:
 
 def standardize_label_column(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    if "manual_labeling" not in df.columns and "Label Final" in df.columns:
-        df["manual_labeling"] = df["Label Final"]
-    if "manual_labeling" not in df.columns:
+
+    # Kolom label diprioritaskan sesuai output notebook revisi.
+    label_priority = [
+        "label_final",
+        "label_final_semisupervised",
+        "Label Final",
+        "manual_labeling",
+        "label_manual_awal",
+        "sentiment",
+        "sentimen",
+        "label",
+    ]
+    label_source = next((col for col in label_priority if col in df.columns), None)
+    if label_source is None:
         candidate_cols = [c for c in df.columns if "label" in c.lower()]
-        if candidate_cols:
-            df["manual_labeling"] = df[candidate_cols[0]]
+        label_source = candidate_cols[0] if candidate_cols else None
+
     if "full_text" not in df.columns:
-        text_candidates = [c for c in df.columns if c.lower() in {"text", "tweet", "content"}]
+        text_candidates = [c for c in df.columns if c.lower() in {"text", "tweet", "content", "clean_text"}]
         if text_candidates:
             df["full_text"] = df[text_candidates[0]]
-    required_cols = {"full_text", "manual_labeling"}
-    missing = required_cols - set(df.columns)
+
+    missing = []
+    if "full_text" not in df.columns:
+        missing.append("full_text")
+    if label_source is None:
+        missing.append("label_final/label_final_semisupervised/manual_labeling")
     if missing:
         raise ValueError(
-            "Dataset harus punya kolom full_text dan manual_labeling/Label Final. "
-            f"Kolom yang hilang: {', '.join(sorted(missing))}."
+            "Dataset harus punya kolom teks dan label. "
+            f"Kolom yang hilang: {', '.join(missing)}."
         )
 
-    df["manual_labeling"] = df["manual_labeling"].astype(str).str.strip().str.lower()
+    df["manual_labeling"] = df[label_source].astype(str).str.strip().str.lower()
     df.loc[df["manual_labeling"].isin(["", "nan", "none", "null"]), "manual_labeling"] = np.nan
     df["label_final"] = df["manual_labeling"]
+    df["label_source_used"] = label_source
     return df
-
 
 @st.cache_data(show_spinner=False)
 def get_stopwords() -> Tuple[set, str]:
@@ -665,20 +712,21 @@ def cleansing_summary(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "pemeriksaan": [
-                "Jumlah data",
+                "Jumlah data sumber",
+                "Jumlah data siap modeling biner",
                 "full_text kosong",
-                "manual_labeling kosong",
+                "label kosong",
                 "Duplikat full_text",
             ],
             "hasil": [
                 len(df),
+                int(df["label_final"].isin(MODEL_LABELS).sum()),
                 int(df["full_text"].isna().sum()),
-                int(df["manual_labeling"].isna().sum()),
+                int(df["label_final"].isna().sum()),
                 int(df["full_text"].duplicated().sum()),
             ],
         }
     )
-
 
 @st.cache_data(show_spinner=False)
 def top_words(series: pd.Series, n: int = 20) -> pd.DataFrame:
@@ -691,6 +739,10 @@ def top_words(series: pd.Series, n: int = 20) -> pd.DataFrame:
 def split_and_train(df: pd.DataFrame) -> Dict[str, Any]:
     """Split data and train the deployable baseline models from notebook code."""
     df_model = df.dropna(subset=["label_final"]).copy()
+    df_model = df_model[df_model["label_final"].isin(MODEL_LABELS)].copy()
+
+    if df_model["label_final"].nunique() < 2:
+        raise ValueError("Dataset modeling harus berisi minimal dua label: ancaman dan peluang.")
 
     train_val_idx, test_idx = train_test_split(
         df_model.index,
@@ -847,18 +899,53 @@ def predict_text(text: str, df_for_preproc: pd.DataFrame, artifacts: Dict[str, A
 
 @st.cache_data(show_spinner=True)
 def dominant_issues(df: pd.DataFrame) -> pd.DataFrame:
-    """Self-contained issue analysis adapted from notebook section 4.17."""
-    df_issues = df.dropna(subset=["label_final"]).copy()
+    """Analisis frasa dominan mengikuti notebook revisi bagian 4.17."""
+    df_phrases = standardize_label_column(df)
+    df_phrases = (
+        df_phrases[df_phrases["label_final"].isin(MODEL_LABELS)]
+        .copy()
+        .reset_index(drop=True)
+    )
 
-    def normalize_issue_text(text: Any) -> str:
-        text = str(text).lower()
-        text = URL_PATTERN.sub(" ", text)
-        text = MENTION_PATTERN.sub(" ", text)
-        text = HASHTAG_PATTERN.sub(r"\1", text)
-        text = NON_ALNUM_PATTERN.sub(" ", text)
-        return MULTISPACE_PATTERN.sub(" ", text).strip()
+    if df_phrases.empty:
+        return pd.DataFrame(columns=[
+            "label", "rank", "frasa_dominan", "jumlah_tweet",
+            "skor_tfidf_rata_rata", "skor_pembeda"
+        ])
 
-    basic_stopwords_issue = {
+    # Jika dataset memuat informasi keputusan semi-supervised, gunakan subset label stabil
+    # seperti pada notebook agar frasa tidak didominasi pseudo-label yang bertentangan.
+    if "label_decision_semisupervised" in df_phrases.columns:
+        stable_decisions = [
+            "manual_seed_300",
+            "pseudo_label_high_confidence",
+            "review_low_confidence_use_manual_reference",
+        ]
+        stable_phrase_mask = df_phrases["label_decision_semisupervised"].isin(stable_decisions)
+        if "label_manual_awal" in df_phrases.columns:
+            manual_same_mask = (
+                df_phrases["label_manual_awal"].astype(str).str.strip().str.lower()
+                == df_phrases["label_final"]
+            )
+            stable_phrase_mask = stable_phrase_mask & (
+                manual_same_mask
+                | df_phrases["label_decision_semisupervised"].isin([
+                    "manual_seed_300",
+                    "review_low_confidence_use_manual_reference",
+                ])
+            )
+        if stable_phrase_mask.any():
+            df_phrases = df_phrases[stable_phrase_mask].copy().reset_index(drop=True)
+
+    def normalize_phrase_text(text_value: Any) -> str:
+        text_value = str(text_value).lower()
+        text_value = URL_PATTERN.sub(" ", text_value)
+        text_value = MENTION_PATTERN.sub(" ", text_value)
+        text_value = HASHTAG_PATTERN.sub(r"\1", text_value)
+        text_value = NON_ALNUM_PATTERN.sub(" ", text_value)
+        return MULTISPACE_PATTERN.sub(" ", text_value).strip()
+
+    basic_stopwords_phrase = {
         "yang", "dan", "di", "ke", "dari", "untuk", "dengan", "dalam", "pada", "ini", "itu",
         "atau", "juga", "karena", "kalau", "akan", "bisa", "ada", "jadi", "lebih", "sudah",
         "saja", "sangat", "sebagai", "para", "aku", "kamu", "kita", "mereka", "dia",
@@ -866,54 +953,129 @@ def dominant_issues(df: pd.DataFrame) -> pd.DataFrame:
         "rt", "amp", "https", "http", "co", "t", "nya", "nih", "sih", "dong", "kok", "lah",
         "ya", "ga", "gak", "nggak", "yg",
     }
-    keep_issue_words = {"ai", "kerja", "pekerjaan", "phk", "skill", "karir", "peluang", "ancaman"}
+    keep_phrase_words = {
+        "ai", "kerja", "pekerjaan", "phk", "skill", "karir", "peluang", "ancaman",
+        "reskilling", "upskilling", "otomatisasi",
+    }
 
     try:
         from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
-
-        stopwords_issue = set(StopWordRemoverFactory().get_stop_words()) | basic_stopwords_issue
+        stopwords_phrase = set(StopWordRemoverFactory().get_stop_words()) | basic_stopwords_phrase
     except Exception:
-        stopwords_issue = set(basic_stopwords_issue)
+        stopwords_phrase = set(basic_stopwords_phrase)
+    stopwords_phrase = sorted(stopwords_phrase - keep_phrase_words)
 
-    stopwords_issue = sorted(stopwords_issue - keep_issue_words)
-    df_issues["issue_text"] = df_issues["full_text"].apply(normalize_issue_text)
+    df_phrases["phrase_text"] = df_phrases["full_text"].apply(normalize_phrase_text)
 
-    issue_vectorizer = TfidfVectorizer(
-        ngram_range=(2, 3),
+    phrase_vectorizer = TfidfVectorizer(
+        ngram_range=(2, 4),
         min_df=3,
         max_df=0.80,
-        stop_words=stopwords_issue,
+        stop_words=stopwords_phrase,
         token_pattern=r"(?u)\b\w\w+\b",
         sublinear_tf=True,
     )
-    X_issue_tfidf = issue_vectorizer.fit_transform(df_issues["issue_text"])
-    issue_features = issue_vectorizer.get_feature_names_out()
-    issue_analyzer = issue_vectorizer.build_analyzer()
+    X_phrase_tfidf = phrase_vectorizer.fit_transform(df_phrases["phrase_text"])
+    phrase_features = phrase_vectorizer.get_feature_names_out()
+    phrase_analyzer = phrase_vectorizer.build_analyzer()
+
+    weak_edge_words = {
+        "alasan", "isu", "biasanya", "terus", "yang", "dan", "atau", "karena", "kalau",
+        "dengan", "untuk", "pada", "lebih", "saja", "posisi", "tugasnya", "terlalu",
+    }
+    domain_terms = {
+        "ai", "kerja", "pekerjaan", "lapangan", "diganti", "digantikan", "menggantikan",
+        "tergantikan", "otomatisasi", "diotomatisasi", "reskilling", "upskilling", "skill",
+        "karir", "peluang", "ancaman", "produktif", "produktivitas", "membantu", "bantu",
+        "alat", "manusia", "rentan", "efisiensi", "phk", "kreativitas", "inovasi",
+    }
+    blocked_phrases = {
+        "standar biasanya", "biasanya paling", "standar biasanya paling",
+        "standar biasanya paling mudah", "ditunda terus", "alasan isu", "alasan isu reskilling",
+        "isu reskilling", "isu reskilling ditunda", "biasanya paling mudah", "posisi tugasnya",
+        "tugasnya terlalu", "terlalu standar", "efisiensi ruang", "perusahaan mengejar",
+        "kerja perusahaan", "ancaman harus", "tambah manusia tidak", "pekerjaan awal",
+        "pekerjaan tidak", "juta lapangan", "depan pekerjaan", "manusia makin",
+    }
+    blocked_substrings = {
+        "standar biasanya", "biasanya paling", "posisi tugasnya", "tugasnya terlalu",
+        "terlalu standar", "alasan isu", "ditunda terus",
+    }
+
+    def is_informative_phrase(phrase: str) -> bool:
+        words = phrase.split()
+        if len(words) < 2:
+            return False
+        if phrase in blocked_phrases or any(blocked_part in phrase for blocked_part in blocked_substrings):
+            return False
+        if words[0] in weak_edge_words or words[-1] in weak_edge_words:
+            return False
+        if not any(word in domain_terms for word in words):
+            return False
+        meaningful_words = [word for word in words if word not in weak_edge_words and len(word) > 2]
+        return len(meaningful_words) >= 2
+
+    def is_redundant_phrase(phrase: str, selected_phrases: List[str], overlap_threshold: float = 0.75) -> bool:
+        phrase_tokens = set(phrase.split())
+        for selected_phrase in selected_phrases:
+            selected_tokens = set(selected_phrase.split())
+            if phrase_tokens.issubset(selected_tokens) or selected_tokens.issubset(phrase_tokens):
+                return True
+            overlap = len(phrase_tokens & selected_tokens) / max(1, len(phrase_tokens | selected_tokens))
+            if overlap >= overlap_threshold:
+                return True
+        return False
+
+    label_score_map: Dict[str, np.ndarray] = {}
+    label_position_map: Dict[str, np.ndarray] = {}
+    for label in MODEL_LABELS:
+        label_positions = np.flatnonzero(df_phrases["label_final"].to_numpy() == label)
+        label_position_map[label] = label_positions
+        label_score_map[label] = X_phrase_tfidf[label_positions].mean(axis=0).A1 if len(label_positions) else np.zeros(len(phrase_features))
 
     rows = []
-    for label in LABEL_ORDER:
-        label_indices = df_issues.index[df_issues["label_final"] == label].to_numpy()
-        if len(label_indices) == 0:
+    for label in MODEL_LABELS:
+        label_positions = label_position_map[label]
+        if len(label_positions) == 0:
             continue
-        label_scores = X_issue_tfidf[df_issues.index.get_indexer(label_indices)].mean(axis=0).A1
-        top_indices = label_scores.argsort()[::-1][:12]
-        label_texts = df_issues.loc[label_indices, "issue_text"]
-        label_doc_ngrams = [set(issue_analyzer(text)) for text in label_texts]
 
-        for rank, feature_idx in enumerate(top_indices, start=1):
-            phrase = issue_features[feature_idx]
+        other_labels = [other_label for other_label in MODEL_LABELS if other_label != label]
+        other_scores = np.mean([label_score_map[other_label] for other_label in other_labels], axis=0)
+        label_scores = label_score_map[label]
+        dominance_scores = label_scores - other_scores
+        candidate_indices = sorted(
+            range(len(phrase_features)),
+            key=lambda idx: (dominance_scores[idx], label_scores[idx]),
+            reverse=True,
+        )
+
+        label_texts = df_phrases.iloc[label_positions]["phrase_text"]
+        label_doc_ngrams = [set(phrase_analyzer(text_value)) for text_value in label_texts]
+        selected_phrases: List[str] = []
+
+        for feature_idx in candidate_indices:
+            phrase = phrase_features[feature_idx]
+            if dominance_scores[feature_idx] <= 0:
+                continue
+            if not is_informative_phrase(phrase):
+                continue
+            if is_redundant_phrase(phrase, selected_phrases):
+                continue
+
             jumlah_tweet = sum(phrase in doc_ngrams for doc_ngrams in label_doc_ngrams)
-            rows.append(
-                {
-                    "label": label,
-                    "rank": rank,
-                    "frasa_dominan": phrase,
-                    "jumlah_tweet": int(jumlah_tweet),
-                    "skor_tfidf_rata_rata": float(label_scores[feature_idx]),
-                }
-            )
-    return pd.DataFrame(rows)
+            selected_phrases.append(phrase)
+            rows.append({
+                "label": label,
+                "rank": len(selected_phrases),
+                "frasa_dominan": phrase,
+                "jumlah_tweet": int(jumlah_tweet),
+                "skor_tfidf_rata_rata": float(label_scores[feature_idx]),
+                "skor_pembeda": float(dominance_scores[feature_idx]),
+            })
+            if len(selected_phrases) == 12:
+                break
 
+    return pd.DataFrame(rows)
 
 # -----------------------------------------------------------------------------
 # PLOTTING FUNCTIONS
@@ -1000,7 +1162,9 @@ def research_accuracy_chart(height: int = 360) -> go.Figure:
         )
     )
     fig.update_layout(title=dict(text="Accuracy Masing-Masing Model", font=dict(color="#111827", size=14)))
-    fig.update_xaxes(range=[0.80, 0.89], tickformat=".0%")
+    min_acc = float(comparison_df["Accuracy"].min())
+    max_acc = float(comparison_df["Accuracy"].max())
+    fig.update_xaxes(range=[max(0, min_acc - 0.02), min(1, max_acc + 0.01)], tickformat=".0%")
     return plotly_dark_layout(fig, height=height)
 
 
@@ -1110,21 +1274,43 @@ def accuracy_chart(results: Dict[str, Any]) -> go.Figure:
 
 
 def confusion_matrix_figure(cm: np.ndarray, title: str, height: int = 360) -> go.Figure:
-    fig = px.imshow(
-        cm,
-        x=LABEL_ORDER,
-        y=LABEL_ORDER,
-        text_auto=True,
-        color_continuous_scale="Blues",
-        aspect="equal",
-        labels=dict(x="Prediksi", y="Label Aktual", color="Jumlah"),
+    cm = np.asarray(cm)
+    labels = LABEL_ORDER[: cm.shape[0]]
+    if len(labels) != cm.shape[0]:
+        labels = [f"Label {i+1}" for i in range(cm.shape[0])]
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=cm,
+            x=[label.capitalize() for label in labels],
+            y=[label.capitalize() for label in labels],
+            colorscale="Blues",
+            showscale=True,
+            colorbar=dict(title="Jumlah"),
+            hovertemplate="Aktual: %{y}<br>Prediksi: %{x}<br>Jumlah: %{z}<extra></extra>",
+        )
     )
+
+    max_value = float(cm.max()) if cm.size else 0
+    for row_idx in range(cm.shape[0]):
+        for col_idx in range(cm.shape[1]):
+            value = int(cm[row_idx, col_idx])
+            text_color = "white" if max_value and value > max_value * 0.55 else "#111827"
+            fig.add_annotation(
+                x=col_idx,
+                y=row_idx,
+                text=str(value),
+                showarrow=False,
+                font=dict(color=text_color, size=14),
+            )
+
     fig.update_layout(
         title=dict(text=title, font=dict(color="#111827", size=14)),
+        xaxis_title="Prediksi",
+        yaxis_title="Label Aktual",
         margin=dict(l=40, r=20, t=50, b=45),
     )
     return plotly_dark_layout(fig, height=height)
-
 
 def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
     class_rows = report_df[report_df["Kelas"].str.lower().isin(LABEL_ORDER)].copy()
@@ -1138,23 +1324,24 @@ def metrics_bar(report_df: pd.DataFrame) -> go.Figure:
 
 
 def issue_chart(top_issues: pd.DataFrame, label: str) -> go.Figure:
+    score_col = "skor_pembeda" if "skor_pembeda" in top_issues.columns else "skor_tfidf_rata_rata"
     plot_data = (
         top_issues[top_issues["label"] == label]
         .head(10)
-        .sort_values("skor_tfidf_rata_rata", ascending=True)
+        .sort_values(score_col, ascending=True)
     )
     fig = go.Figure(
         go.Bar(
-            x=plot_data["skor_tfidf_rata_rata"],
+            x=plot_data[score_col],
             y=plot_data["frasa_dominan"],
             orientation="h",
             marker_color=LABEL_COLORS.get(label, "#4E79A7"),
-            text=[f"{x:.4f} | {c} tweet" for x, c in zip(plot_data["skor_tfidf_rata_rata"], plot_data["jumlah_tweet"])],
+            text=[f"{x:.4f} | {c} tweet" for x, c in zip(plot_data[score_col], plot_data["jumlah_tweet"])],
             textposition="outside",
             textfont=dict(color="#111827", size=10),
         )
     )
-    fig.update_layout(title=dict(text=f"Isu Dominan: {label.capitalize()}", font=dict(color="#111827", size=14)))
+    fig.update_layout(title=dict(text=f"Frasa Dominan: {label.capitalize()}", font=dict(color="#111827", size=14)))
     return plotly_dark_layout(fig, height=390)
 
 
@@ -1175,7 +1362,7 @@ def train_transformer_optional(
     from datasets import Dataset
     from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments
 
-    label2id = {"ancaman": 0, "peluang": 1, "netral": 2}
+    label2id = {label: idx for idx, label in enumerate(LABEL_ORDER)}
     id2label = {v: k for k, v in label2id.items()}
 
     train_df = df_model.loc[train_idx, [text_col, "label_final"]].rename(columns={text_col: "text"}).copy()
@@ -1264,7 +1451,7 @@ with st.sidebar:
     )
 
     st.markdown('<div class="sidebar-nav-label">Dataset</div>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Upload Dataset Final.csv", type=["csv"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Upload dataset CSV", type=["csv"], label_visibility="collapsed")
 
     use_stemming = st.toggle("Aktifkan stemming Sastrawi", value=False)
     st.caption("Default dimatikan agar deploy lebih cepat. Aktifkan untuk menjalankan skenario stemming seperti notebook.")
@@ -1290,10 +1477,10 @@ with st.sidebar:
     st.markdown("---")
     if uploaded_file is not None:
         st.success("Dataset dari uploader aktif.")
-    elif DEFAULT_DATASET.exists():
-        st.success("Dataset Final.csv ditemukan di repo.")
+    elif DEFAULT_DATASET is not None:
+        st.success(f"{DEFAULT_DATASET.name} ditemukan di repo.")
     else:
-        st.error("Dataset Final.csv belum ditemukan.")
+        st.error("Dataset belum ditemukan. Upload Dataset Final Semisupervised Binary.csv ke root repo atau folder data/.")
 
     st.markdown(
         """
@@ -1313,6 +1500,8 @@ try:
     if uploaded_file is not None:
         raw_df = read_csv_safely(uploaded_file)
     else:
+        if DEFAULT_DATASET is None:
+            raise FileNotFoundError("Dataset Final Semisupervised Binary.csv belum ditemukan di root repo atau folder data/.")
         raw_df = load_dataset_from_path(str(DEFAULT_DATASET))
 
     with st.spinner("Menjalankan pipeline dari dataset..."):
@@ -1325,12 +1514,20 @@ except Exception as exc:
     st.stop()
 
 
-label_counts = processed_df["label_final"].value_counts().reindex(LABEL_ORDER).dropna()
+label_counts = artifacts["df_model"]["label_final"].value_counts().reindex(LABEL_ORDER).dropna()
 model_results = artifacts["results"]
 best_svm_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
 research_comparison_df = research_model_comparison_dataframe()
-best_research_model = research_comparison_df.loc[0, "Model"]
-best_research_accuracy = research_comparison_df.loc[0, "Accuracy"]
+best_research_accuracy = float(research_comparison_df.loc[0, "Accuracy"])
+best_research_models = research_comparison_df.loc[
+    research_comparison_df["Accuracy"].eq(best_research_accuracy), "Model"
+].tolist()
+best_research_model = best_research_models[0]
+best_research_model_display = "IndoBERT" if "IndoBERT" in best_research_models else best_research_model
+best_research_model_sub = (
+    "Setara IndoBERTweet" if {"IndoBERT", "IndoBERTweet"}.issubset(set(best_research_models))
+    else "Hasil modeling Bab IV"
+)
 
 
 # -----------------------------------------------------------------------------
@@ -1357,10 +1554,10 @@ if selected_name == "Overview":
         <div class="info-card">
             <div class="info-card-title">Tentang Dashboard</div>
             <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
-                Dashboard ini menampilkan hasil modeling dari skenario TF-IDF + SVM, IndoBERT,
-                IndoBERTweet, dan IndoBERTweet tanpa normalisasi. Aplikasi tetap membaca
-                <code>Dataset Final.csv</code> untuk visualisasi data, preprocessing, data split,
-                dan prediksi interaktif.
+                Dashboard ini menampilkan hasil modeling revisi setelah sidang dengan skenario biner
+                <code>ancaman</code> dan <code>peluang</code>. Aplikasi memprioritaskan
+                <code>Dataset Final Semisupervised Binary.csv</code> untuk visualisasi data,
+                preprocessing, data split, dan prediksi interaktif.
             </p>
         </div>
         """,
@@ -1369,10 +1566,10 @@ if selected_name == "Overview":
 
     cols = st.columns(5)
     kpis = [
-        ("Total Data", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#4E79A7"),
-        ("Data Berlabel", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap dianalisis", "#59A14F"),
-        ("Kategori Label", f"{processed_df['label_final'].nunique()}", "Ancaman · Peluang · Netral", "#F28E2B"),
-        ("Model Terbaik", best_research_model, "Hasil modeling Bab IV", "#E15759"),
+        ("Total Data Biner", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap modeling", "#4E79A7"),
+        ("Data Sumber", f"{len(processed_df):,}".replace(",", "."), "Baris dataset aktif", "#59A14F"),
+        ("Kategori Label", str(len(LABEL_ORDER)), "Ancaman · Peluang", "#F28E2B"),
+        ("Model Terbaik", best_research_model_display, best_research_model_sub, "#E15759"),
         ("Accuracy Terbaik", f"{best_research_accuracy*100:.2f}%", "Test set", "#B07AA1"),
     ]
     for col, (label, value, sub, color) in zip(cols, kpis):
@@ -1386,8 +1583,9 @@ if selected_name == "Overview":
         section_header("02", "Visualisasi Accuracy Model")
         st.plotly_chart(research_accuracy_chart(height=390), use_container_width=True)
         insight(
-            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_research_model}</strong> "
-            f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong> pada test set.",
+            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_research_model_display}</strong> "
+            f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong> pada test set. "
+            f"IndoBERTweet memperoleh accuracy yang setara pada rekap evaluasi.",
             "success",
         )
 
@@ -1758,7 +1956,7 @@ elif selected_name == "Model Comparison":
 
     cols = st.columns(4)
     with cols[0]:
-        kpi_card("Best Model", comparison_df.loc[0, "Model"], "Ranking #1", "#E15759")
+        kpi_card("Best Model", best_research_model_display, best_research_model_sub, "#E15759")
     with cols[1]:
         kpi_card("Best Accuracy", f"{comparison_df.loc[0, 'Accuracy']*100:.2f}%", "Test set", "#59A14F")
     with cols[2]:
@@ -1787,8 +1985,9 @@ elif selected_name == "Model Comparison":
     )
 
     insight(
-        f"Model terbaik pada hasil modeling skripsi adalah <strong>{comparison_df.loc[0, 'Model']}</strong> "
-        f"dengan accuracy <strong>{comparison_df.loc[0, 'Accuracy']*100:.2f}%</strong>.",
+        f"Model terbaik pada hasil modeling skripsi adalah <strong>{best_research_model_display}</strong> "
+        f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong>. "
+        f"Pada rekap notebook, IndoBERTweet memperoleh nilai accuracy yang sama.",
         "success",
     )
 
@@ -1802,7 +2001,7 @@ elif selected_name == "Isu Dominan":
         <div class="info-card">
             <div class="info-card-title">Metode</div>
             <p style="color:#374151;font-size:0.9rem;line-height:1.7;margin:0;">
-                Analisis ini memakai TF-IDF n-gram 2 sampai 3 kata untuk mencari frasa dominan
+                Analisis ini memakai TF-IDF n-gram 2 sampai 4 kata untuk mencari frasa dominan
                 pada masing-masing label sentimen. Perhitungan dilakukan langsung dari dataset aktif.
             </p>
         </div>
@@ -1815,7 +2014,7 @@ elif selected_name == "Isu Dominan":
         selected_issue_label = st.selectbox("Pilih kategori sentimen", LABEL_ORDER)
         st.plotly_chart(issue_chart(top_issues, selected_issue_label), use_container_width=True)
         st.dataframe(
-            top_issues[top_issues["label"] == selected_issue_label].style.format({"skor_tfidf_rata_rata": "{:.5f}"}),
+            top_issues[top_issues["label"] == selected_issue_label].style.format({"skor_tfidf_rata_rata": "{:.5f}", "skor_pembeda": "{:.5f}"}),
             use_container_width=True,
             hide_index=True,
         )
