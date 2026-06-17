@@ -2162,7 +2162,7 @@ elif selected_name == "Model Comparison":
 
 
 elif selected_name == "Isu Dominan":
-    section_header("11", "Analisis Isu Dominan per Sentimen")
+    section_header("11", "Analisis Frasa Dominan per Sentimen")
 
     st.markdown(
         """
@@ -2187,5 +2187,5 @@ elif selected_name == "Isu Dominan":
             hide_index=True,
         )
     except Exception as exc:
-        st.error("Analisis isu dominan belum bisa dihitung.")
+        st.error("Analisis Frasa dominan belum bisa dihitung.")
         st.exception(exc)
