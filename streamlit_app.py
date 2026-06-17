@@ -1593,7 +1593,7 @@ with st.sidebar:
         ("🔮", "Prediksi"),
         ("🧠", "Hasil Transformer"),
         ("🏆", "Model Comparison"),
-        ("🧩", "Isu Dominan"),
+        ("🧩", "Frasa Dominan"),
     ]
     page_labels = [f"{icon} {name}" for icon, name in pages]
     selected = st.radio("", page_labels, label_visibility="collapsed")
