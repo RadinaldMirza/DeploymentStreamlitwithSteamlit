@@ -494,10 +494,84 @@ button[data-baseweb="tab"][aria-selected="true"] p {
     border-radius: 8px !important;
 }
 
+
+.dual-best-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 14px;
+    padding: 1.0rem 1.0rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 132px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dual-best-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent-color, #E15759);
+    border-radius: 14px 14px 0 0;
+}
+
+.dual-best-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280 !important;
+    margin-bottom: 0.45rem;
+}
+
+.dual-best-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.18rem;
+    margin: 0.05rem 0 0.15rem 0;
+}
+
+.dual-best-pill {
+    display: inline-block;
+    min-width: 8.7rem;
+    max-width: 100%;
+    padding: 0.13rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid #f3c2c3;
+    background: #fff7f7;
+    color: #111827 !important;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.0rem;
+    line-height: 1.12;
+    white-space: nowrap;
+}
+
+.dual-best-join {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #6b7280 !important;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.dual-best-sub {
+    font-size: 0.70rem;
+    color: #6b7280 !important;
+    margin-top: 0.25rem;
+}
+
+
 .info-card *,
 .best-model-card *,
 .insight-box *,
-.kpi-card * {
+.kpi-card *,
+.dual-best-card * {
     color: inherit;
 }
 </style>
@@ -537,6 +611,30 @@ def kpi_card(label: str, value: str, sub: str, color: str) -> None:
             <div class="kpi-label">{label}</div>
             <div class="kpi-value" style="color:{color};font-size:{value_font_size};word-break:normal;overflow-wrap:break-word;">{value_text}</div>
             <div class="kpi-sub">{sub}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+
+
+def dual_best_model_card(models: List[str], sub: str = "Accuracy tertinggi setara", color: str = "#E15759") -> None:
+    """Render a compact KPI card for tied best models."""
+    pills_html = ""
+    for i, model in enumerate(models):
+        pills_html += f'<div class="dual-best-pill">{model}</div>'
+        if i < len(models) - 1:
+            pills_html += '<div class="dual-best-join">&</div>'
+
+    st.markdown(
+        f"""
+        <div class="dual-best-card" style="--accent-color:{color};">
+            <div class="dual-best-label">Model Terbaik</div>
+            <div class="dual-best-stack">
+                {pills_html}
+            </div>
+            <div class="dual-best-sub">{sub}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1528,6 +1626,11 @@ best_research_model_sub = (
     "Setara IndoBERTweet" if {"IndoBERT", "IndoBERTweet"}.issubset(set(best_research_models))
     else "Hasil modeling Bab IV"
 )
+best_research_model_cards = (
+    ["IndoBERT", "IndoBERTweet"]
+    if {"IndoBERT", "IndoBERTweet"}.issubset(set(best_research_models))
+    else [best_research_model_display]
+)
 
 
 # -----------------------------------------------------------------------------
@@ -1565,16 +1668,40 @@ if selected_name == "Overview":
     )
 
     cols = st.columns(5)
-    kpis = [
-        ("Total Data Biner", f"{len(artifacts['df_model']):,}".replace(",", "."), "Siap modeling", "#4E79A7"),
-        ("Data Sumber", f"{len(processed_df):,}".replace(",", "."), "Baris dataset aktif", "#59A14F"),
-        ("Kategori Label", str(len(LABEL_ORDER)), "Ancaman · Peluang", "#F28E2B"),
-        ("Model Terbaik", best_research_model_display, best_research_model_sub, "#E15759"),
-        ("Accuracy Terbaik", f"{best_research_accuracy*100:.2f}%", "Test set", "#B07AA1"),
-    ]
-    for col, (label, value, sub, color) in zip(cols, kpis):
-        with col:
-            kpi_card(label, value, sub, color)
+    with cols[0]:
+        kpi_card(
+            "Total Data Biner",
+            f"{len(artifacts['df_model']):,}".replace(",", "."),
+            "Siap modeling",
+            "#4E79A7",
+        )
+    with cols[1]:
+        kpi_card(
+            "Data Sumber",
+            f"{len(processed_df):,}".replace(",", "."),
+            "Baris dataset aktif",
+            "#59A14F",
+        )
+    with cols[2]:
+        kpi_card(
+            "Kategori Label",
+            str(len(LABEL_ORDER)),
+            "Ancaman · Peluang",
+            "#F28E2B",
+        )
+    with cols[3]:
+        dual_best_model_card(
+            best_research_model_cards,
+            sub="Accuracy tertinggi setara" if len(best_research_model_cards) > 1 else best_research_model_sub,
+            color="#E15759",
+        )
+    with cols[4]:
+        kpi_card(
+            "Accuracy Terbaik",
+            f"{best_research_accuracy*100:.2f}%",
+            "Test set",
+            "#B07AA1",
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1583,9 +1710,9 @@ if selected_name == "Overview":
         section_header("02", "Visualisasi Accuracy Model")
         st.plotly_chart(research_accuracy_chart(height=390), use_container_width=True)
         insight(
-            f"Berdasarkan hasil modeling Bab IV, model terbaik adalah <strong>{best_research_model_display}</strong> "
-            f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong> pada test set. "
-            f"IndoBERTweet memperoleh accuracy yang setara pada rekap evaluasi.",
+            f"Berdasarkan hasil modeling Bab IV, dua model terbaik adalah <strong>IndoBERT</strong> "
+            f"dan <strong>IndoBERTweet</strong> dengan accuracy yang sama, yaitu "
+            f"<strong>{best_research_accuracy*100:.2f}%</strong> pada test set.",
             "success",
         )
 
@@ -1956,7 +2083,11 @@ elif selected_name == "Model Comparison":
 
     cols = st.columns(4)
     with cols[0]:
-        kpi_card("Best Model", best_research_model_display, best_research_model_sub, "#E15759")
+        dual_best_model_card(
+            best_research_model_cards,
+            sub="Peringkat #1 bersama" if len(best_research_model_cards) > 1 else best_research_model_sub,
+            color="#E15759",
+        )
     with cols[1]:
         kpi_card("Best Accuracy", f"{comparison_df.loc[0, 'Accuracy']*100:.2f}%", "Test set", "#59A14F")
     with cols[2]:
@@ -1985,9 +2116,9 @@ elif selected_name == "Model Comparison":
     )
 
     insight(
-        f"Model terbaik pada hasil modeling skripsi adalah <strong>{best_research_model_display}</strong> "
-        f"dengan accuracy <strong>{best_research_accuracy*100:.2f}%</strong>. "
-        f"Pada rekap notebook, IndoBERTweet memperoleh nilai accuracy yang sama.",
+        f"Dua model terbaik pada hasil modeling skripsi adalah <strong>IndoBERT</strong> "
+        f"dan <strong>IndoBERTweet</strong> dengan accuracy yang sama, yaitu "
+        f"<strong>{best_research_accuracy*100:.2f}%</strong>.",
         "success",
     )
 
