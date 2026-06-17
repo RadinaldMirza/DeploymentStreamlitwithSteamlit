@@ -60,6 +60,20 @@ CSV_CANDIDATES = [
     BASE_DIR / "data" / "Dataset Final.csv",
 ]
 
+# Kandidat dataset sumber untuk KPI "Data Sumber".
+# Modeling tetap memakai dataset biner 5.034 baris, tetapi sumber data penelitian
+# dapat berasal dari dataset penuh 5.226 baris jika file tersebut tersedia di repo.
+SOURCE_DATASET_CANDIDATES = [
+    BASE_DIR / "Dataset_Skripsi_Finals_Bismillah.csv",
+    BASE_DIR / "data" / "Dataset_Skripsi_Finals_Bismillah.csv",
+    BASE_DIR / "Dataset Final.csv",
+    BASE_DIR / "data" / "Dataset Final.csv",
+    BASE_DIR / "Dataset Final Semisupervised.csv",
+    BASE_DIR / "data" / "Dataset Final Semisupervised.csv",
+    BASE_DIR / "Dataset Final Semisupervised Binary.csv",
+    BASE_DIR / "data" / "Dataset Final Semisupervised Binary.csv",
+]
+
 
 def get_default_dataset_path() -> Optional[Path]:
     for candidate in CSV_CANDIDATES:
@@ -68,7 +82,15 @@ def get_default_dataset_path() -> Optional[Path]:
     return None
 
 
+def get_source_dataset_path() -> Optional[Path]:
+    for candidate in SOURCE_DATASET_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 DEFAULT_DATASET = get_default_dataset_path()
+DEFAULT_SOURCE_DATASET = get_source_dataset_path()
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.20
@@ -692,6 +714,11 @@ def read_csv_safely(source: Any) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def load_dataset_from_path(path: str) -> pd.DataFrame:
     return read_csv_safely(path)
+
+
+@st.cache_data(show_spinner=False)
+def get_dataset_row_count(path: str) -> int:
+    return int(len(read_csv_safely(path)))
 
 
 def standardize_label_column(df: pd.DataFrame) -> pd.DataFrame:
@@ -1612,6 +1639,16 @@ except Exception as exc:
     st.stop()
 
 
+if uploaded_file is not None:
+    source_data_count = int(len(raw_df))
+    source_dataset_name = "Dataset upload"
+elif DEFAULT_SOURCE_DATASET is not None:
+    source_data_count = get_dataset_row_count(str(DEFAULT_SOURCE_DATASET))
+    source_dataset_name = DEFAULT_SOURCE_DATASET.name
+else:
+    source_data_count = int(len(raw_df))
+    source_dataset_name = DEFAULT_DATASET.name if DEFAULT_DATASET is not None else "Dataset aktif"
+
 label_counts = artifacts["df_model"]["label_final"].value_counts().reindex(LABEL_ORDER).dropna()
 model_results = artifacts["results"]
 best_svm_model = max(model_results.items(), key=lambda item: item[1]["accuracy"])[0]
@@ -1678,8 +1715,8 @@ if selected_name == "Overview":
     with cols[1]:
         kpi_card(
             "Data Sumber",
-            f"{len(processed_df):,}".replace(",", "."),
-            "Baris dataset aktif",
+            f"{source_data_count:,}".replace(",", "."),
+            "Baris dataset awal",
             "#59A14F",
         )
     with cols[2]:
@@ -2093,7 +2130,7 @@ elif selected_name == "Model Comparison":
     with cols[2]:
         kpi_card("Jumlah Model", str(len(comparison_df)), "Skenario modeling", "#4E79A7")
     with cols[3]:
-        kpi_card("Dataset", f"{len(processed_df):,}".replace(",", "."), "Tweet", "#F28E2B")
+        kpi_card("Data Biner", f"{len(artifacts['df_model']):,}".replace(",", "."), "Tweet siap model", "#F28E2B")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
