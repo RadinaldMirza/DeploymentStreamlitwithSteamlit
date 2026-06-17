@@ -2161,7 +2161,7 @@ elif selected_name == "Model Comparison":
 
 
 
-elif selected_name == "Isu Dominan":
+elif selected_name == "Frasa Dominan":
     section_header("11", "Analisis Frasa Dominan per Sentimen")
 
     st.markdown(
